@@ -31,7 +31,7 @@ import jakarta.el.ValueExpression;
  * @author Kin-man
  */
 public class OperatorTest {
-    
+
     static ELProcessor elp;
 
     public OperatorTest() {
@@ -39,17 +39,18 @@ public class OperatorTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
         elp = new ELProcessor();
     }
 
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     void testExpr(String testname, String expr, Object expected) {
         System.out.println("=== Test " + testname + " ===");
         System.out.println(" ** " + expr);
@@ -70,7 +71,7 @@ public class OperatorTest {
         testExpr("concat 5", "'100' + 10 + 1", Long.valueOf(111));
         testExpr("concat 6", "'100' += 10 + 1", "10011");
     }
-    
+
     @Test
     public void testAssign() {
         elp.eval("vv = 10");
@@ -82,7 +83,7 @@ public class OperatorTest {
         testExpr("assign 4", "map.two = 201; map.two", Long.valueOf(201));
         testExpr("assign string", "x='string'; x += 1", "string1");
     }
-    
+
     @Test
     public void testSemi() {
         testExpr("semi", "10; 20", Long.valueOf(20));
@@ -101,14 +102,14 @@ public class OperatorTest {
                 elm.getELContext(), "#${1+1}", Object.class);
         Object ret = v.getValue(elm.getELContext());
         assertEquals(ret, "#2");
-        
+
         elp.setVariable("debug", "true");
         ret = elp.eval("debug == true");
 //        elp.eval("[1,2][true]"); // throws IllegalArgumentExpression
-/*        
+/*
         elp.defineBean("date", new Date(2013, 1,2));
         elp.eval("date.getYear()");
-        
+
         elp.defineBean("href", null);
         testExpr("space", "(empty href)?'#':href", "#");
         MethodExpression m = elm.getExpressionFactory().createMethodExpression(

@@ -168,7 +168,7 @@
                             <Specification-Vendor>Eclipse Foundation</Specification-Vendor>
                             <Implementation-Version>${project.version}</Implementation-Version>
                             <Implementation-Vendor>${vendorName}</Implementation-Vendor>
-                            <Automatic-Module-Name>com.sun.el</Automatic-Module-Name>
+                            <Automatic-Module-Name>org.glassfish.expressly</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -203,7 +203,7 @@
                             <groups>
                                 <group>
                                     <title>Eclipse Expressly ${project.version}, a Jakarta Expression Language Implementation</title>
-                                    <packages>com.sun.el</packages>
+                                    <packages>org.glassfish.expressly</packages>
                                 </group>
                             </groups>
                             <bottom><![CDATA[

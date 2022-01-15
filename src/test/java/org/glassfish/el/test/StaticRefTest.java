@@ -38,6 +38,7 @@ public class StaticRefTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
     }
 
     @AfterClass
@@ -61,13 +62,6 @@ public class StaticRefTest {
         ret = elp.eval("Boolean.TRUE");
         assertTrue(ret.booleanValue());  // test caching Boolean
     }
-
-/*
-    @Test
-    public void testClass() {
-        assertEquals(String.class, elp.eval("String.class"));
-    }
-*/
 
     @Test
     public void testConstructor() {

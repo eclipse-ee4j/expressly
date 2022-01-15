@@ -34,6 +34,7 @@ public class EscapingTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
         elp = new ELProcessor();
         elm = elp.getELManager();
     }

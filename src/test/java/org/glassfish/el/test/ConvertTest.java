@@ -41,6 +41,7 @@ public class ConvertTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
     }
 
     @AfterClass
@@ -118,7 +119,7 @@ public class ConvertTest {
                 return null;
             }
         });
-        
+
         Object val = elp.getValue("'John Doe'", MyBean.class);
         assertTrue(val instanceof MyBean);
         assertEquals(((MyBean)val).getName(), "John Doe");

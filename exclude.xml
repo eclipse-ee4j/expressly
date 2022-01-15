@@ -18,18 +18,18 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="com.sun.el.parser.SimpleCharStream"/>
+        <Class name="org.glassfish.expressly.parser.SimpleCharStream"/>
     </Match>
     <Match>
-        <Class name="com.sun.el.parser.ELParser"/>
+        <Class name="org.glassfish.expressly.parser.ELParser"/>
     </Match>
     <Match>
-        <Class name="com.sun.el.parser.ELParserTokenManager"/>
+        <Class name="org.glassfish.expressly.parser.ELParserTokenManager"/>
     </Match>
     <Match>
-        <Class name="com.sun.el.parser.ELParserConstants"/>
+        <Class name="org.glassfish.expressly.parser.ELParserConstants"/>
     </Match>
     <Match>
-        <Class name="com.sun.el.parser.TokenMgrError"/>
+        <Class name="org.glassfish.expressly.parser.TokenMgrError"/>
     </Match>
 </FindBugsFilter>

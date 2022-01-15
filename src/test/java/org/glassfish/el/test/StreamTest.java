@@ -37,6 +37,8 @@ public class StreamTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
+
         elp = new ELProcessor();
         database = new DataBase();
         database.init();
@@ -83,7 +85,7 @@ public class StreamTest {
             int i = 0;
             for (Object item: list) {
                 p(" " + item.toString());
-                assertEquals(item.toString(), expected[i++]); 
+                assertEquals(item.toString(), expected[i++]);
             }
             assertTrue(i == expected.length);
             return;
@@ -186,7 +188,7 @@ public class StreamTest {
         "Order: 12, 100, 8/2/2011, 210.75",
         "Order: 13, 101, 1/15/2011, 50.23",
         "Order: 14, 101, 1/3/2012, 126.77"};
-    
+
     static String[] exp9 = {"t","h","e","q","u","i","c","k","b","r","o","w","n","f","o","x"};
 
     @Test
@@ -252,13 +254,13 @@ public class StreamTest {
 
     @Test
     public void testArith() {
-        testStream("sum", "[1,2,3,4,5].stream().sum()", Long.valueOf(15)); 
-        testStream("sum", "[1.4,2,3,4,5.1].stream().sum()", Double.valueOf(15.5)); 
-        testStream("average", "[1,2,3,4,5].stream().average().get()", Double.valueOf(3.0)); 
-        testStream("average", "[1.4,2,3,4,5.1].stream().average().get()", Double.valueOf(3.1)); 
+        testStream("sum", "[1,2,3,4,5].stream().sum()", Long.valueOf(15));
+        testStream("sum", "[1.4,2,3,4,5.1].stream().sum()", Double.valueOf(15.5));
+        testStream("average", "[1,2,3,4,5].stream().average().get()", Double.valueOf(3.0));
+        testStream("average", "[1.4,2,3,4,5.1].stream().average().get()", Double.valueOf(3.1));
         testStream("count", "[1,2,3,4,5].stream().count()", Long.valueOf(5));
     }
-    
+
     @Test
     public void testMinMax() {
         testStream("min", "[2,3,1,5].stream().min().get()", Long.valueOf(1));
@@ -273,7 +275,7 @@ public class StreamTest {
         elp.eval("comparing = map->(x,y)->map(x).compareTo(map(y))");
         testStream("min", "customers.stream().min(comparing(c->c.orders.size())).get().name", "Charlie Yeh");
     }
-    
+
     @Test
     public void testMap() {
         Object r = elp.eval("v = {'one':1, 'two':2}");

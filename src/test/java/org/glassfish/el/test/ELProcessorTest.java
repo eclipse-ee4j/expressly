@@ -36,14 +36,16 @@ public class ELProcessorTest {
     static ELProcessor elp;
     static ELManager elm;
     static ExpressionFactory factory;
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
+
         elp = new ELProcessor();
         elm = elp.getELManager();
         factory = ELManager.getExpressionFactory();
     }
-    
+
     @Before
     public void setUp() {
     }
@@ -93,14 +95,14 @@ public class ELProcessorTest {
         result = elp.eval("10 += '1'");
         assertEquals(result.toString(), "101");
     }
-    
+
     @Test
     public void testParenthesis() {
         elp.setVariable("xx", "1");
         Object result = elp.eval("((xx)) + 1");
         assertEquals(result, Long.valueOf(2));
     }
-    
+
     @Test
     public void defineFuncTest() {
         Class<?> c = MyBean.class;
@@ -117,9 +119,9 @@ public class ELProcessorTest {
             Boolean ret = elp.eval("xx:getBar() == 64");
             assertTrue(ret.booleanValue());
         } catch (NoSuchMethodException ex) {
-            
+
         }
-        
+
         boolean caught = false;
         try {
             elp.defineFunction("", "", meth2);
@@ -129,15 +131,15 @@ public class ELProcessorTest {
             caught = true;
         }
         assertTrue(caught);
-        
+
         try {
             elp.defineFunction("yy", "", "org.glassfish.el.test.ELProcessorTest$MyBean", "getBar");
             Boolean ret = elp.eval("yy:getBar() == 64");
             assertTrue(ret.booleanValue());
         } catch (ClassNotFoundException | NoSuchMethodException ex) {
-            
+
         }
-        
+
         caught = false;
         try {
             elp.defineFunction("yy", "", "org.glassfish.el.test.ELProcessorTest$MyBean", "getFooBar");
@@ -147,7 +149,7 @@ public class ELProcessorTest {
             caught = true;
         }
         assertTrue(caught);
-        
+
         caught = false;
         try {
             elp.defineFunction("yy", "", "testBean", "getFoo");
@@ -190,7 +192,7 @@ public class ELProcessorTest {
         public int getFoo() {
             return 100;
         }
-        
+
         @SuppressWarnings("unused")
         public int getFoo(int i) {
             return 200;

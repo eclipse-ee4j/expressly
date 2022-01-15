@@ -25,15 +25,16 @@ import static org.junit.Assert.assertEquals;
 import jakarta.el.ELProcessor;
 
 public class LambdaTest {
-    
+
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
     }
-    
+
     @Before
-    public void setUp() {    
-    } 
-    
+    public void setUp() {
+    }
+
     void testExpr(ELProcessor elp, String testname, String expr, Long expected) {
         System.out.println("=== Test Lambda Expression:" + testname + " ===");
         System.out.println(" ** " + expr);
@@ -71,7 +72,7 @@ public class LambdaTest {
 
     @Test
     public void testFact() {
-        ELProcessor elp = new ELProcessor();        
+        ELProcessor elp = new ELProcessor();
         testExpr(elp, "factorial", "fact = n->n==0? 1: n*fact(n-1); fact(5)", Long.valueOf(120));
         testExpr(elp, "fibonacci", "f = n->n==0? 0: n==1? 1: f(n-1)+f(n-2); f(10)", Long.valueOf(55));
     }

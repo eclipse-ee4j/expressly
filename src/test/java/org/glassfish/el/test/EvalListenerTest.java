@@ -39,6 +39,7 @@ public class EvalListenerTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+        System.setProperty("jakarta.el.ExpressionFactory", "org.glassfish.expressly.ExpressionFactoryImpl");
     }
 
     @AfterClass
