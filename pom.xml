@@ -32,16 +32,16 @@
     <artifactId>jakarta.el</artifactId>
     <version>5.0.0-SNAPSHOT</version>
 
-    <name>Jakarta Expression Language Implementation</name>
+    <name>Eclipse Expressly</name>
     <description>Jakarta Expression Language Implementation</description>
-    <url>https://projects.eclipse.org/projects/ee4j.el</url>
+    <url>https://projects.eclipse.org/projects/ee4j.expressly</url>
 
     <developers>
         <developer>
-            <id>jakarta-ee4j-el</id>
-            <name>Jakarta Expression Language Developers</name>
+            <id>jakarta-ee4j-expressly</id>
+            <name>Eclipse Expressly Developers</name>
             <organization>Eclipse Foundation</organization>
-            <email>el-dev@eclipse.org</email>
+            <email>expressly-dev@eclipse.org</email>
         </developer>
     </developers>
     <contributors>
@@ -54,23 +54,23 @@
 
     <mailingLists>
         <mailingList>
-            <name>Expression Language dev mailing list</name>
-            <post>el-dev@eclipse.org</post>
-            <subscribe>https://dev.eclipse.org/mailman/listinfo/el-dev</subscribe>
-            <unsubscribe>https://dev.eclipse.org/mailman/listinfo/el-dev</unsubscribe>
-            <archive>https://dev.eclipse.org/mhonarc/lists/el-dev</archive>
+            <name>Expressly dev mailing list</name>
+            <post>expressly-dev@eclipse.org</post>
+            <subscribe>https://dev.eclipse.org/mailman/listinfo/expressly-dev</subscribe>
+            <unsubscribe>https://dev.eclipse.org/mailman/listinfo/expressly-dev</unsubscribe>
+            <archive>https://dev.eclipse.org/mhonarc/lists/expressly-dev</archive>
         </mailingList>
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://github.com/eclipse-ee4j/el-ri.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/eclipse-ee4j/el-ri.git</developerConnection>
-        <url>https://github.com/eclipse-ee4j/el-ri</url>
+        <connection>scm:git:https://github.com/eclipse-ee4j/expressly-ri.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/eclipse-ee4j/expressly-ri.git</developerConnection>
+        <url>https://github.com/eclipse-ee4j/expressly-ri</url>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/eclipse-ee4j/el-ri/issues</url>
+        <url>https://github.com/eclipse-ee4j/expressly-ri/issues</url>
     </issueManagement>
 
     <dependencies>
@@ -208,7 +208,7 @@
                             </groups>
                             <bottom><![CDATA[
 Comments to: <a href="mailto:el-dev@eclipse.org">el-dev@eclipse.org</a>.<br>
-Copyright &#169; 2018, 2021 Eclipse Foundation. All rights reserved.<br>
+Copyright &#169; 2018, 2022 Eclipse Foundation. All rights reserved.<br>
 Use is subject to <a href="http://www.eclipse.org/legal/epl-2.0" target="_top">license terms</a>.]]>
                             </bottom>
                         </configuration>

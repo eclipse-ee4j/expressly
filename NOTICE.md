@@ -1,13 +1,13 @@
-# Notices for Jakarta Expression Language
+# Notices for Expressly
 
-This content is produced and maintained by the Jakarta Expression Language project.
+This content is produced and maintained by the Eclipse Expressly project.
 
-* Project home: https://projects.eclipse.org/projects/ee4j.el
+* Project home: https://projects.eclipse.org/projects/ee4j.expressly
 
 ## Trademarks
 
-Jakarta Expression Language is a trademark of the Eclipse
-Foundation.
+Expressly and Jakarta Expression Language are trademark of the Eclipse
+Foundations.
 
 ## Copyright
 
@@ -31,7 +31,7 @@ SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
 
 The project maintains the following source code repositories:
 
-* https://github.com/eclipse-ee4j/el-ri
+* https://github.com/eclipse-ee4j/expressly
 
 ## Third-party Content
 
