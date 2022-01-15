@@ -37,8 +37,6 @@
     <url>https://projects.eclipse.org/projects/ee4j.el</url>
 
     <modules>
-        <module>api</module>
-        <module>spec</module>
         <module>impl</module>
     </modules>
 
