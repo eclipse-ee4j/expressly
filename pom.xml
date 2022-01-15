@@ -28,7 +28,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>org.glassfish</groupId>
+    <groupId>org.glassfish.expressly</groupId>
     <artifactId>expressly</artifactId>
     <version>5.0.0-SNAPSHOT</version>
 
