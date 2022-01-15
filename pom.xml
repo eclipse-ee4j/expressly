@@ -29,7 +29,7 @@
     </parent>
 
     <groupId>org.glassfish</groupId>
-    <artifactId>jakarta.el</artifactId>
+    <artifactId>expressly</artifactId>
     <version>5.0.0-SNAPSHOT</version>
 
     <name>Eclipse Expressly</name>
@@ -202,7 +202,7 @@
                             <quiet>true</quiet>
                             <groups>
                                 <group>
-                                    <title>Jakarta Expression Language ${project.version} Implementation</title>
+                                    <title>Eclipse Expressly ${project.version}, a Jakarta Expression Language Implementation</title>
                                     <packages>com.sun.el</packages>
                                 </group>
                             </groups>
