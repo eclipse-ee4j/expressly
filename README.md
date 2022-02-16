@@ -3,7 +3,7 @@
 
 Eclipse Expressly implements [Jakarta Expression Language](https://jakarta.ee/specifications/expression-language/4.0/jakarta-expression-language-spec-4.0.html), an expression language for Java applications.
 
-This project contains the Eclipse implementation. For the API see https://github.com/eclipse-ee4j/el-ri
+This project contains the Eclipse implementation. For the API see https://github.com/jakartaee/expression-language
 
 
 Building
