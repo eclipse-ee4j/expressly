@@ -249,14 +249,16 @@ public final class AstValue extends SimpleNode {
     }
 
     @Override
-    public MethodInfo getMethodInfo(EvaluationContext ctx, Class[] paramTypes) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
-            return null;
-        }
-        Object property = t.suffixNode.getValue(ctx);
-        Method m = ReflectionUtil.findMethod(t.base.getClass(), property.toString(), paramTypes, null);
-        return new MethodInfo(m.getName(), m.getReturnType(), m.getParameterTypes());
+    public MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException {
+        Target target = getTarget(ctx);
+
+        Method method = ReflectionUtil.findMethod(
+                            target.base.getClass(),
+                            target.suffixNode.getValue(ctx).toString(),
+                            paramTypes,
+                            target.getParamValues());
+
+        return new MethodInfo(method.getName(), method.getReturnType(), method.getParameterTypes());
     }
 
     @Override
