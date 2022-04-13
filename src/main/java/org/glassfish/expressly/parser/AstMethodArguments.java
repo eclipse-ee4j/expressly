@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2012, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,20 +34,19 @@ public class AstMethodArguments extends SimpleNode {
     }
 
     public Object[] getParameters(EvaluationContext ctx) throws ELException {
-
-        if (this.children == null) {
+        if (children == null) {
             return new Object[] {};
         }
 
-        Object[] obj = new Object[this.children.length];
+        Object[] obj = new Object[children.length];
         for (int i = 0; i < obj.length; i++) {
-            obj[i] = this.children[i].getValue(ctx);
+            obj[i] = children[i].getValue(ctx);
         }
         return obj;
     }
 
     public int getParameterCount() {
-        return this.children == null ? 0 : this.children.length;
+        return children == null ? 0 : children.length;
     }
 
     @Override

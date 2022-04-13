@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -69,7 +70,7 @@ public interface Node {
 
     void setValue(EvaluationContext ctx, Object value) throws ELException;
 
-    Class getType(EvaluationContext ctx) throws ELException;
+    Class<?> getType(EvaluationContext ctx) throws ELException;
 
     ValueReference getValueReference(EvaluationContext ctx) throws ELException;
 
@@ -77,9 +78,9 @@ public interface Node {
 
     void accept(NodeVisitor visitor) throws ELException;
 
-    MethodInfo getMethodInfo(EvaluationContext ctx, Class[] paramTypes) throws ELException;
+    MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException;
 
-    Object invoke(EvaluationContext ctx, Class[] paramTypes, Object[] paramValues) throws ELException;
+    Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException;
 
     @Override
     boolean equals(Object n);

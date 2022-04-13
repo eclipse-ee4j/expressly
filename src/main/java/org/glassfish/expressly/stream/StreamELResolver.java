@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2012, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,25 +34,26 @@ public class StreamELResolver extends ELResolver {
 
     @Override
     public Object invoke(final ELContext context, final Object base, final Object method, final Class<?>[] paramTypes, final Object[] params) {
-
         if (context == null) {
             throw new NullPointerException();
         }
 
         if (base instanceof Collection) {
             @SuppressWarnings("unchecked")
-            Collection<Object> c = (Collection<Object>) base;
+            Collection<Object> collection = (Collection<Object>) base;
             if ("stream".equals(method) && params.length == 0) {
                 context.setPropertyResolved(true);
-                return new Stream(c.iterator());
+                return new Stream(collection.iterator());
             }
         }
+
         if (base.getClass().isArray()) {
             if ("stream".equals(method) && params.length == 0) {
                 context.setPropertyResolved(true);
                 return new Stream(arrayIterator(base));
             }
         }
+
         return null;
     }
 
@@ -84,11 +86,6 @@ public class StreamELResolver extends ELResolver {
         };
     }
 
-    /*
-     * private LambdaExpression getLambda(Object obj, String method) { if (obj == null || ! (obj instanceof
-     * LambdaExpression)) { throw new ELException ("When calling " + method + ", expecting an " +
-     * "EL lambda expression, but found " + obj); } return (LambdaExpression) obj; }
-     */
     @Override
     public Object getValue(ELContext context, Object base, Object property) {
         return null;

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2012, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -16,6 +17,8 @@
 
 package org.glassfish.expressly.stream;
 
+import java.util.NoSuchElementException;
+
 import jakarta.el.LambdaExpression;
 
 public class Optional {
@@ -26,6 +29,7 @@ public class Optional {
         if (value == null) {
             throw new NullPointerException();
         }
+
         this.value = value;
     }
 
@@ -45,8 +49,9 @@ public class Optional {
 
     public Object get() {
         if (value == null) {
-            throw new java.util.NoSuchElementException("No value present");
+            throw new NoSuchElementException("No value present");
         }
+
         return value;
     }
 

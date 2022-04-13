@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -34,32 +35,32 @@ import jakarta.el.MethodInfo;
 public class MethodExpressionLiteral extends MethodExpression implements Externalizable {
 
     private Class<?> expectedType;
-    private String expr;
+    private String expression;
     private Class<?>[] paramTypes;
 
     public MethodExpressionLiteral() {
         // do nothing
     }
 
-    public MethodExpressionLiteral(String expr, Class<?> expectedType, Class<?>[] paramTypes) {
-        this.expr = expr;
+    public MethodExpressionLiteral(String expression, Class<?> expectedType, Class<?>[] paramTypes) {
+        this.expression = expression;
         this.expectedType = expectedType;
         this.paramTypes = paramTypes;
     }
 
     @Override
     public MethodInfo getMethodInfo(ELContext context) throws ELException {
-        return new MethodInfo(expr, expectedType, paramTypes);
+        return new MethodInfo(expression, expectedType, paramTypes);
     }
 
     @Override
     public Object invoke(ELContext context, Object[] params) throws ELException {
         if (expectedType == null) {
-            return expr;
+            return expression;
         }
 
         try {
-            return context.convertToType(expr, expectedType);
+            return context.convertToType(expression, expectedType);
         } catch (Exception ex) {
             throw new ELException(ex);
         }
@@ -67,7 +68,7 @@ public class MethodExpressionLiteral extends MethodExpression implements Externa
 
     @Override
     public String getExpressionString() {
-        return expr;
+        return expression;
     }
 
     @Override
@@ -77,7 +78,7 @@ public class MethodExpressionLiteral extends MethodExpression implements Externa
 
     @Override
     public int hashCode() {
-        return expr.hashCode();
+        return expression.hashCode();
     }
 
     @Override
@@ -87,7 +88,7 @@ public class MethodExpressionLiteral extends MethodExpression implements Externa
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        expr = in.readUTF();
+        expression = in.readUTF();
         String type = in.readUTF();
 
         if (!"".equals(type)) {
@@ -99,7 +100,7 @@ public class MethodExpressionLiteral extends MethodExpression implements Externa
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeUTF(expr);
+        out.writeUTF(expression);
         out.writeUTF(expectedType != null ? expectedType.getName() : "");
         out.writeObject(toTypeNameArray(paramTypes));
     }

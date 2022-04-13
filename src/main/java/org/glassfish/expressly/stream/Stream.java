@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2012, 2020 Oracle and/or its affiliates and others.
  * All rights reserved.
  *
@@ -64,7 +65,7 @@ public class Stream {
                     @Override
                     public void doItem(Object item) {
                         if ((Boolean) predicate.invoke(item)) {
-                            yield(item);
+                            doYield(item);
                         }
                     }
                 };
@@ -94,7 +95,7 @@ public class Stream {
                     @Override
                     void doItem(Object item) {
                         comsumer.invoke(item);
-                        yield(item);
+                        doYield(item);
                     }
                 };
             }
@@ -158,7 +159,7 @@ public class Stream {
                     @Override
                     public void doItem(Object item) {
                         if (set.add(item)) {
-                            yield(item);
+                            doYield(item);
                         }
                     }
                 };
@@ -178,7 +179,7 @@ public class Stream {
                         @Override
                         public int compare(Object o1, Object o2) {
                             @SuppressWarnings("unchecked")
-                            int result = ((Comparable<Object>) o1).compareTo(o2); 
+                            int result = ((Comparable<Object>) o1).compareTo(o2);
                             return result;
                         }
                     });
@@ -214,7 +215,7 @@ public class Stream {
                     queue = new PriorityQueue<Object>(16, new Comparator<Object>() {
                         @Override
                         public int compare(Object o1, Object o2) {
-                            return (Integer) ELSupport.coerceToType(comparator.invoke(o1, o2), Integer.class);
+                            return ELSupport.coerceToType(comparator.invoke(o1, o2), Integer.class);
                         }
                     });
 
@@ -485,9 +486,9 @@ public class Stream {
 
     abstract class Iterator1 extends Iterator0 {
 
-        Iterator iter;
+        protected final Iterator<?> iter;
 
-        Iterator1(Iterator iter) {
+        Iterator1(Iterator<?> iter) {
             this.iter = iter;
         }
 
@@ -498,10 +499,11 @@ public class Stream {
     }
 
     abstract class Iterator2 extends Iterator1 {
+
         private Object current;
         private boolean yielded;
 
-        Iterator2(Iterator upstream) {
+        Iterator2(Iterator<?> upstream) {
             super(upstream);
         }
 
@@ -519,7 +521,7 @@ public class Stream {
             return yielded;
         }
 
-        void yield(Object current) {
+        void doYield(Object current) {
             this.current = current;
             yielded = true;
         }

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2020 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -40,17 +41,29 @@ import jakarta.el.ValueReference;
 public final class AstValue extends SimpleNode {
 
     protected static class Target {
-        protected Object base;
-        protected Node suffixNode;
+        private final Object base;
+        private final Node suffixNode;
+        private final EvaluationContext ctx;
 
-        Target(Object base, Node suffixNode) {
+        Target(Object base, Node suffixNode, EvaluationContext ctx) {
             this.base = base;
             this.suffixNode = suffixNode;
+            this.ctx = ctx;
         }
 
         boolean isMethodCall() {
             return getArguments(suffixNode) != null;
         }
+
+        Object[] getParamValues() {
+            AstMethodArguments arguments = getArguments(suffixNode);
+            if (arguments == null) {
+                return null;
+            }
+
+            return getArguments(suffixNode).getParameters(ctx);
+        }
+
     }
 
     public AstValue(int id) {
@@ -63,12 +76,14 @@ public final class AstValue extends SimpleNode {
         if (t.isMethodCall()) {
             return null;
         }
+
         Object property = t.suffixNode.getValue(ctx);
         ctx.setPropertyResolved(false);
         Class ret = ctx.getELResolver().getType(ctx, t.base, property);
         if (!ctx.isPropertyResolved()) {
             ELSupport.throwUnhandled(t.base, property);
         }
+
         return ret;
     }
 
@@ -82,18 +97,19 @@ public final class AstValue extends SimpleNode {
         return new ValueReference(t.base, property);
     }
 
-    private static AstMethodArguments getArguments(Node n) {
-        if (n instanceof AstDotSuffix && n.jjtGetNumChildren() > 0) {
-            return (AstMethodArguments) n.jjtGetChild(0);
+    private static AstMethodArguments getArguments(Node node) {
+        if (node instanceof AstDotSuffix && node.jjtGetNumChildren() > 0) {
+            return (AstMethodArguments) node.jjtGetChild(0);
         }
-        if (n instanceof AstBracketSuffix && n.jjtGetNumChildren() > 1) {
-            return (AstMethodArguments) n.jjtGetChild(1);
+
+        if (node instanceof AstBracketSuffix && node.jjtGetNumChildren() > 1) {
+            return (AstMethodArguments) node.jjtGetChild(1);
         }
+
         return null;
     }
 
     private Object getValue(Object base, Node child, EvaluationContext ctx) throws ELException {
-
         Object value = null;
         ELResolver resolver = ctx.getELResolver();
         Object property = child.getValue(ctx);
@@ -140,32 +156,34 @@ public final class AstValue extends SimpleNode {
     }
 
     private Target getTarget(EvaluationContext ctx) throws ELException {
-        // evaluate expr-a to value-a
+        // Evaluate expr-a to value-a
         Object base = getBase(ctx);
 
         // if our base is null (we know there are more properites to evaluate)
         if (base == null) {
-            throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.base", this.children[0].getImage()));
+            throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.base", children[0].getImage()));
         }
 
-        // set up our start/end
+        // Set up our start/end
         Object property = null;
         int propCount = this.jjtGetNumChildren() - 1;
         int i = 1;
 
-        // evaluate any properties before our target
+        // Evaluate any properties before our target
         if (propCount > 1) {
             while (base != null && i < propCount) {
                 base = getValue(base, this.children[i], ctx);
                 i++;
             }
-            // if we are in this block, we have more properties to resolve,
+
+            // If we are in this block, we have more properties to resolve,
             // but our base was null
             if (base == null) {
                 throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.property", property));
             }
         }
-        return new Target(base, this.children[propCount]);
+
+        return new Target(base, children[propCount], ctx);
     }
 
     @Override

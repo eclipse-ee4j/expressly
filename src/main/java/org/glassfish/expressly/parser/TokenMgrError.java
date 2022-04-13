@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2021 Payara Services Ltd.
+ * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0, which is available at
@@ -18,9 +19,10 @@
 package org.glassfish.expressly.parser;
 
 public class TokenMgrError extends Error {
-    /*
-     * Ordinals for various reasons why an Error of this type can be thrown.
-     */
+
+    private static final long serialVersionUID = 1L;
+
+    // Ordinals for various reasons why an Error of this type can be thrown.
 
     /**
      * Lexical error occured.
@@ -50,48 +52,50 @@ public class TokenMgrError extends Error {
     /**
      * Replaces unprintable characters by their espaced (or unicode escaped) equivalents in the given string
      */
-    protected static final String addEscapes(String str) {
-        StringBuilder retval = new StringBuilder();
+    protected static final String addEscapes(String unescapedString) {
+        StringBuilder escapedString = new StringBuilder();
+
         char ch;
-        for (int i = 0; i < str.length(); i++) {
-            switch (str.charAt(i)) {
+        for (int i = 0; i < unescapedString.length(); i++) {
+            switch (unescapedString.charAt(i)) {
             case 0:
                 continue;
             case '\b':
-                retval.append("\\b");
+                escapedString.append("\\b");
                 continue;
             case '\t':
-                retval.append("\\t");
+                escapedString.append("\\t");
                 continue;
             case '\n':
-                retval.append("\\n");
+                escapedString.append("\\n");
                 continue;
             case '\f':
-                retval.append("\\f");
+                escapedString.append("\\f");
                 continue;
             case '\r':
-                retval.append("\\r");
+                escapedString.append("\\r");
                 continue;
             case '\"':
-                retval.append("\\\"");
+                escapedString.append("\\\"");
                 continue;
             case '\'':
-                retval.append("\\\'");
+                escapedString.append("\\\'");
                 continue;
             case '\\':
-                retval.append("\\\\");
+                escapedString.append("\\\\");
                 continue;
             default:
-                if ((ch = str.charAt(i)) < 0x20 || ch > 0x7e) {
+                if ((ch = unescapedString.charAt(i)) < 0x20 || ch > 0x7e) {
                     String s = "0000" + Integer.toString(ch, 16);
-                    retval.append("\\u" + s.substring(s.length() - 4, s.length()));
+                    escapedString.append("\\u" + s.substring(s.length() - 4, s.length()));
                 } else {
-                    retval.append(ch);
+                    escapedString.append(ch);
                 }
                 continue;
             }
         }
-        return retval.toString();
+
+        return escapedString.toString();
     }
 
     /**
@@ -102,22 +106,13 @@ public class TokenMgrError extends Error {
      * lexical error message by modifying this method.
      */
     protected static String LexicalError(boolean EOFSeen, int lexState, int errorLine, int errorColumn, String errorAfter, char curChar) {
-        return ("Lexical error at line " + errorLine + ", column " + errorColumn + ".  Encountered: "
-                + (EOFSeen ? "<EOF> " : ("\"" + addEscapes(String.valueOf(curChar)) + "\"") + " (" + (int) curChar + "), ") + "after : \""
-                + addEscapes(errorAfter) + "\"");
-    }
-
-    /**
-     * You can also modify the body of this method to customize your error messages. For example, cases like LOOP_DETECTED
-     * and INVALID_LEXICAL_STATE are not of end-users concern, so you can return something like :
-     *
-     * "Internal Error : Please file a bug report .... "
-     *
-     * from this method for such cases in the release version of your parser.
-     */
-    @Override
-    public String getMessage() {
-        return super.getMessage();
+        return
+            "Lexical error at line " + errorLine +
+            ", column " + errorColumn +
+            ".  Encountered: " +
+            (EOFSeen ? "<EOF> " : ("\"" + addEscapes(String.valueOf(curChar)) + "\"") +
+            " (" + (int) curChar + "), ") +
+            "after : \"" + addEscapes(errorAfter) + "\"";
     }
 
     /*
@@ -134,5 +129,18 @@ public class TokenMgrError extends Error {
 
     public TokenMgrError(boolean EOFSeen, int lexState, int errorLine, int errorColumn, String errorAfter, char curChar, int reason) {
         this(LexicalError(EOFSeen, lexState, errorLine, errorColumn, errorAfter, curChar), reason);
+    }
+
+    /**
+     * You can also modify the body of this method to customize your error messages. For example, cases like LOOP_DETECTED
+     * and INVALID_LEXICAL_STATE are not of end-users concern, so you can return something like :
+     *
+     * "Internal Error : Please file a bug report .... "
+     *
+     * from this method for such cases in the release version of your parser.
+     */
+    @Override
+    public String getMessage() {
+        return super.getMessage();
     }
 }
