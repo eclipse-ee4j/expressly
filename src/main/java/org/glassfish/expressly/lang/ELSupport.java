@@ -19,6 +19,7 @@ package org.glassfish.expressly.lang;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -41,9 +42,9 @@ public class ELSupport {
     public final static void throwUnhandled(Object base, Object property) throws ELException {
         if (base == null) {
             throw new PropertyNotFoundException(MessageFactory.get("error.resolver.unhandled.null", property));
-        } else {
-            throw new PropertyNotFoundException(MessageFactory.get("error.resolver.unhandled", base.getClass(), property));
         }
+
+        throw new PropertyNotFoundException(MessageFactory.get("error.resolver.unhandled", base.getClass(), property));
     }
 
     /**
@@ -56,6 +57,7 @@ public class ELSupport {
         if (obj0 == obj1 || equals(obj0, obj1)) {
             return 0;
         }
+
         if (isBigDecimalOp(obj0, obj1)) {
             BigDecimal bd0 = (BigDecimal) coerceToNumber(obj0, BigDecimal.class);
             BigDecimal bd1 = (BigDecimal) coerceToNumber(obj1, BigDecimal.class);
@@ -174,6 +176,19 @@ public class ELSupport {
         return Enum.valueOf(type, obj.toString());
     }
 
+    private static Object coerceToArray(final Object sourceArray, final Class<?> type) {
+        int arrayLength = Array.getLength(sourceArray);
+        Class<?> arrayComponentType = type.getComponentType();
+
+        Object coercedArray = Array.newInstance(arrayComponentType, arrayLength);
+
+        for (int i = 0; i < arrayLength; i++) {
+            Array.set(coercedArray, i, coerceToType(Array.get(sourceArray, i), arrayComponentType));
+        }
+
+        return coercedArray;
+    }
+
     public final static Character coerceToCharacter(final Object obj) throws IllegalArgumentException {
         if (obj == null || "".equals(obj)) {
             return Character.valueOf((char) 0);
@@ -195,16 +210,17 @@ public class ELSupport {
     public final static Number coerceToNumber(final Object obj) {
         if (obj == null) {
             return ZERO;
-        } else if (obj instanceof Number) {
-            return (Number) obj;
-        } else {
-            String str = coerceToString(obj);
-            if (isStringFloat(str)) {
-                return toFloat(str);
-            } else {
-                return toNumber(str);
-            }
         }
+        if (obj instanceof Number) {
+            return (Number) obj;
+        }
+
+        String str = coerceToString(obj);
+        if (isStringFloat(str)) {
+            return toFloat(str);
+        }
+
+        return toNumber(str);
     }
 
     protected final static Number coerceToNumber(final Number number, final Class type) throws IllegalArgumentException {
@@ -308,13 +324,15 @@ public class ELSupport {
     public final static String coerceToString(final Object obj) {
         if (obj == null) {
             return "";
-        } else if (obj instanceof String) {
-            return (String) obj;
-        } else if (obj instanceof Enum) {
-            return ((Enum) obj).name();
-        } else {
-            return obj.toString();
         }
+        if (obj instanceof String) {
+            return (String) obj;
+        }
+        if (obj instanceof Enum) {
+            return ((Enum) obj).name();
+        }
+
+        return obj.toString();
     }
 
     public final static void checkType(final Object obj, final Class<?> type) throws IllegalArgumentException {
@@ -339,8 +357,8 @@ public class ELSupport {
         return coerceToType(obj, type, false);
     }
 
+    @SuppressWarnings("unchecked")
     public final static <T> T coerceToType(final Object obj, final Class<T> type, boolean isEL22Compatible) throws IllegalArgumentException {
-
         if (type == null || Object.class.equals(type) || (obj != null && type.isAssignableFrom(obj.getClass()))) {
             return (T) obj;
         }
@@ -353,15 +371,19 @@ public class ELSupport {
         if (String.class.equals(type)) {
             return (T) coerceToString(obj);
         }
+
         if (ELArithmetic.isNumberType(type)) {
             return (T) coerceToNumber(obj, type);
         }
-        if (Character.class.equals(type) || Character.TYPE == type) {
+
+        if (Character.class.equals(type) || type == Character.TYPE) {
             return (T) coerceToCharacter(obj);
         }
-        if (Boolean.class.equals(type) || Boolean.TYPE == type) {
+
+        if (Boolean.class.equals(type) || type == Boolean.TYPE) {
             return (T) coerceToBoolean(obj);
         }
+
         if (type.isEnum()) {
             return (T) coerceToEnum(obj, type);
         }
@@ -380,6 +402,11 @@ public class ELSupport {
                 return (T) editor.getValue();
             }
         }
+
+        if (type.isArray()) {
+            return (T) coerceToArray(obj, type);
+        }
+
         throw new IllegalArgumentException(MessageFactory.get("error.convert", obj, obj.getClass(), type));
     }
 
@@ -438,9 +465,10 @@ public class ELSupport {
         try {
             if (Double.parseDouble(value) > Double.MAX_VALUE) {
                 return new BigDecimal(value);
-            } else {
-                return Double.valueOf(value);
             }
+
+            return Double.valueOf(value);
+
         } catch (NumberFormatException e0) {
             return new BigDecimal(value);
         }
