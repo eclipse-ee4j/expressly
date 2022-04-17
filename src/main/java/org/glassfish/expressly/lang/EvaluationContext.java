@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2021 Oracle and/or its affiliates and others.
  * All rights reserved.
  *
@@ -59,7 +60,7 @@ public final class EvaluationContext extends ELContext {
     }
 
     @Override
-    public Object getContext(Class key) {
+    public Object getContext(Class<?> key) {
         return elContext.getContext(key);
     }
 
@@ -74,7 +75,7 @@ public final class EvaluationContext extends ELContext {
     }
 
     @Override
-    public void putContext(Class key, Object contextObject) {
+    public void putContext(Class<?> key, Object contextObject) {
         elContext.putContext(key, contextObject);
     }
 

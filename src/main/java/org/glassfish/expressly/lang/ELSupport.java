@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2021 Oracle and/or its affiliates and others.
  * All rights reserved.
  *
@@ -16,6 +17,8 @@
  */
 
 package org.glassfish.expressly.lang;
+
+import static org.glassfish.expressly.lang.ELArithmetic.isNumberType;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
@@ -84,15 +87,16 @@ public class ELSupport {
         if (obj0 instanceof Comparable) {
             // Safe cast
             @SuppressWarnings("unchecked")
-            Comparable<Object> cobj0 = (Comparable) obj0;
+            Comparable<Object> cobj0 = (Comparable<Object>) obj0;
             return (obj1 != null) ? cobj0.compareTo(obj1) : 1;
         }
         if (obj1 instanceof Comparable) {
             // Safe cast
             @SuppressWarnings("unchecked")
-            Comparable<Object> cobj1 = (Comparable) obj1;
+            Comparable<Object> cobj1 = (Comparable<Object>) obj1;
             return (obj0 != null) ? -(cobj1.compareTo(obj0)) : -1;
         }
+
         throw new ELException(MessageFactory.get("error.compare", obj0, obj1));
     }
 
@@ -165,7 +169,7 @@ public class ELSupport {
     // Enum types are hard construct. We can declare this as
     // <T extends Enum<T>> T coerceToEnum(Object, Class<T> type)
     // but this makes it harder to get the calls right.
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public final static Enum coerceToEnum(final Object obj, Class type) {
         if (obj == null || "".equals(obj)) {
             return null;
@@ -173,6 +177,7 @@ public class ELSupport {
         if (obj.getClass().isEnum()) {
             return (Enum) obj;
         }
+
         return Enum.valueOf(type, obj.toString());
     }
 
@@ -199,7 +204,8 @@ public class ELSupport {
         if (ELArithmetic.isNumber(obj)) {
             return Character.valueOf((char) ((Number) obj).shortValue());
         }
-        Class objType = obj.getClass();
+
+        Class<?> objType = obj.getClass();
         if (obj instanceof Character) {
             return (Character) obj;
         }
@@ -223,7 +229,7 @@ public class ELSupport {
         return toNumber(str);
     }
 
-    protected final static Number coerceToNumber(final Number number, final Class type) throws IllegalArgumentException {
+    protected final static Number coerceToNumber(final Number number, final Class<?> type) throws IllegalArgumentException {
         if (Long.TYPE == type || Long.class.equals(type)) {
             return Long.valueOf(number.longValue());
         }
@@ -267,7 +273,7 @@ public class ELSupport {
         throw new IllegalArgumentException(MessageFactory.get("error.convert", number, number.getClass(), type));
     }
 
-    public final static Number coerceToNumber(final Object obj, final Class type) throws IllegalArgumentException {
+    public final static Number coerceToNumber(final Object obj, final Class<?> type) throws IllegalArgumentException {
         if (obj == null || "".equals(obj)) {
             return coerceToNumber(ZERO, type);
         }
@@ -288,7 +294,7 @@ public class ELSupport {
         throw new IllegalArgumentException(MessageFactory.get("error.convert", obj, obj.getClass(), type));
     }
 
-    protected final static Number coerceToNumber(final String val, final Class type) throws IllegalArgumentException {
+    protected final static Number coerceToNumber(final String val, final Class<?> type) throws IllegalArgumentException {
         if (Long.TYPE == type || Long.class.equals(type)) {
             return Long.valueOf(val);
         }
@@ -321,6 +327,7 @@ public class ELSupport {
      * @param obj Object to be coerced
      * @return The result of coercion
      */
+    @SuppressWarnings("rawtypes")
     public final static String coerceToString(final Object obj) {
         if (obj == null) {
             return "";
@@ -339,7 +346,7 @@ public class ELSupport {
         if (String.class.equals(type)) {
             coerceToString(obj);
         }
-        if (ELArithmetic.isNumberType(type)) {
+        if (isNumberType(type)) {
             coerceToNumber(obj, type);
         }
         if (Character.class.equals(type) || Character.TYPE == type) {
@@ -403,6 +410,7 @@ public class ELSupport {
             }
         }
 
+        // New in 5.0
         if (type.isArray()) {
             return (T) coerceToArray(obj, type);
         }

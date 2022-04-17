@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -22,11 +23,11 @@ import jakarta.el.FunctionMapper;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
+ * @author kchung
  */
 public class FunctionMapperFactory extends FunctionMapper {
 
-    protected FunctionMapperImpl memento = null;
+    protected FunctionMapperImpl memento;
     protected FunctionMapper target;
 
     public FunctionMapperFactory(FunctionMapper mapper) {
@@ -36,25 +37,21 @@ public class FunctionMapperFactory extends FunctionMapper {
         this.target = mapper;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see FunctionMapper#resolveFunction(java.lang.String, java.lang.String)
-     */
     @Override
     public Method resolveFunction(String prefix, String localName) {
-        if (this.memento == null) {
-            this.memento = new FunctionMapperImpl();
+        if (memento == null) {
+            memento = new FunctionMapperImpl();
         }
-        Method m = this.target.resolveFunction(prefix, localName);
-        if (m != null) {
-            this.memento.addFunction(prefix, localName, m);
+        Method functionMethod = target.resolveFunction(prefix, localName);
+        if (functionMethod != null) {
+            memento.addFunction(prefix, localName, functionMethod);
         }
-        return m;
+
+        return functionMethod;
     }
 
     public FunctionMapper create() {
-        return this.memento;
+        return memento;
     }
 
 }

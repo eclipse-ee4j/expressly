@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -30,7 +31,7 @@ public class VariableMapperImpl extends VariableMapper implements Externalizable
 
     private static final long serialVersionUID = 1L;
 
-    private Map<String, ValueExpression> vars = new HashMap<String, ValueExpression>();
+    private Map<String, ValueExpression> vars = new HashMap<>();
 
     public VariableMapperImpl() {
         super();
@@ -38,23 +39,23 @@ public class VariableMapperImpl extends VariableMapper implements Externalizable
 
     @Override
     public ValueExpression resolveVariable(String variable) {
-        return this.vars.get(variable);
+        return vars.get(variable);
     }
 
     @Override
     public ValueExpression setVariable(String variable, ValueExpression expression) {
-        return this.vars.put(variable, expression);
+        return vars.put(variable, expression);
     }
 
     // Safe cast.
     @Override
     @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.vars = (Map<String, ValueExpression>) in.readObject();
+        vars = (Map<String, ValueExpression>) in.readObject();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(this.vars);
+        out.writeObject(vars);
     }
 }

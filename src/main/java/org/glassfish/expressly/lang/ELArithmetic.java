@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -16,7 +17,7 @@
 
 package org.glassfish.expressly.lang;
 
-import static java.math.BigDecimal.ROUND_HALF_UP;
+import static java.math.RoundingMode.HALF_UP;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -57,7 +58,7 @@ public abstract class ELArithmetic {
 
         @Override
         protected Number divide(Number num0, Number num1) {
-            return ((BigDecimal) num0).divide((BigDecimal) num1, ROUND_HALF_UP);
+            return ((BigDecimal) num0).divide((BigDecimal) num1, HALF_UP);
         }
 
         @Override
@@ -104,7 +105,7 @@ public abstract class ELArithmetic {
 
         @Override
         protected Number divide(Number num0, Number num1) {
-            return (new BigDecimal((BigInteger) num0)).divide(new BigDecimal((BigInteger) num1), ROUND_HALF_UP);
+            return (new BigDecimal((BigInteger) num0)).divide(new BigDecimal((BigInteger) num1), HALF_UP);
         }
 
         @Override
@@ -372,9 +373,14 @@ public abstract class ELArithmetic {
         return (obj != null && isNumberType(obj.getClass()));
     }
 
-    public final static boolean isNumberType(final Class type) {
-        return type == Long.TYPE || type == Double.TYPE || type == Byte.TYPE || type == Short.TYPE || type == Integer.TYPE || type == Float.TYPE
-                || Number.class.isAssignableFrom(type);
+    public final static boolean isNumberType(final Class<?> type) {
+        return type == Long.TYPE ||
+               type == Double.TYPE ||
+               type == Byte.TYPE ||
+               type == Short.TYPE ||
+               type == Integer.TYPE ||
+               type == Float.TYPE ||
+               Number.class.isAssignableFrom(type);
     }
 
     /**
@@ -406,7 +412,7 @@ public abstract class ELArithmetic {
             return coerce(ZERO);
         }
 
-        Class objType = obj.getClass();
+        Class<?> objType = obj.getClass();
         if (Character.class.equals(objType) || Character.TYPE == objType) {
             return coerce(Short.valueOf((short) ((Character) obj).charValue()));
         }
