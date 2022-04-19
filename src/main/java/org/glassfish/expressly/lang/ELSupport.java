@@ -18,17 +18,25 @@
 
 package org.glassfish.expressly.lang;
 
+import static java.lang.reflect.Modifier.isAbstract;
 import static org.glassfish.expressly.lang.ELArithmetic.isNumberType;
 
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.function.BiConsumer;
 
 import org.glassfish.expressly.util.MessageFactory;
 
+import jakarta.el.ELContext;
 import jakarta.el.ELException;
+import jakarta.el.LambdaExpression;
 import jakarta.el.PropertyNotFoundException;
 
 /**
@@ -181,18 +189,69 @@ public class ELSupport {
         return Enum.valueOf(type, obj.toString());
     }
 
-    private static Object coerceToArray(final Object sourceArray, final Class<?> type) {
+    private static Object coerceToArray(ELContext elContext, final Object sourceArray, final Class<?> type) {
         int arrayLength = Array.getLength(sourceArray);
         Class<?> arrayComponentType = type.getComponentType();
 
         Object coercedArray = Array.newInstance(arrayComponentType, arrayLength);
 
         for (int i = 0; i < arrayLength; i++) {
-            Array.set(coercedArray, i, coerceToType(Array.get(sourceArray, i), arrayComponentType));
+            Array.set(coercedArray, i, coerceToType(elContext, Array.get(sourceArray, i), arrayComponentType));
         }
 
         return coercedArray;
     }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T coerceToFunctionalInterface(final ELContext ctx, final LambdaExpression lambdaExpression, final Class<T> type) {
+        return (T) Proxy.newProxyInstance(
+                type.getClassLoader(),
+                new Class[] { type, BiConsumer.class },
+                new LambdaHandler(ctx, lambdaExpression));
+    }
+
+    public static class LambdaHandler implements InvocationHandler {
+
+        private ELContext elContext;
+        private LambdaExpression lambdaExpression;
+
+        public LambdaHandler(ELContext elContext, LambdaExpression lambdaExpression) {
+           this.elContext = elContext;
+           this.lambdaExpression = lambdaExpression;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (isElContextSetter(method, args)) {
+                setElContext((ELContext) args[1]);
+                return null;
+            }
+
+            if (!isAbstract(method.getModifiers())) {
+                return method.invoke(proxy, args);
+            }
+
+            return lambdaExpression.invoke(elContext, args);
+        }
+
+        public void setElContext(ELContext elContext) {
+            this.elContext = elContext;
+        }
+
+        public ELContext getElContext() {
+            return elContext;
+        }
+
+        private boolean isElContextSetter(Method method, Object[] args) {
+            return
+                method.getDeclaringClass().equals(BiConsumer.class) &&
+                method.getName().equals("accept") &&
+                args[0] instanceof String && args[0].toString().equals("org.glassfish.expressly.setElContext") &&
+                args[1] instanceof ELContext
+                ;
+        }
+    }
+
 
     public final static Character coerceToCharacter(final Object obj) throws IllegalArgumentException {
         if (obj == null || "".equals(obj)) {
@@ -360,12 +419,12 @@ public class ELSupport {
         }
     }
 
-    public final static <T> T coerceToType(final Object obj, final Class<T> type) throws IllegalArgumentException {
-        return coerceToType(obj, type, false);
+    public final static <T> T coerceToType(ELContext elContext, final Object obj, final Class<T> type) throws IllegalArgumentException {
+        return coerceToType(elContext, obj, type, false);
     }
 
     @SuppressWarnings("unchecked")
-    public final static <T> T coerceToType(final Object obj, final Class<T> type, boolean isEL22Compatible) throws IllegalArgumentException {
+    public final static <T> T coerceToType(ELContext elContext, final Object obj, final Class<T> type, boolean isEL22Compatible) throws IllegalArgumentException {
         if (type == null || Object.class.equals(type) || (obj != null && type.isAssignableFrom(obj.getClass()))) {
             return (T) obj;
         }
@@ -412,7 +471,12 @@ public class ELSupport {
 
         // New in 5.0
         if (type.isArray()) {
-            return (T) coerceToArray(obj, type);
+            return (T) coerceToArray(elContext, obj, type);
+        }
+
+        if (obj instanceof LambdaExpression && isFunctionalInterface(type)) {
+            T result = coerceToFunctionalInterface(elContext, (LambdaExpression) obj, type);
+            return result;
         }
 
         throw new IllegalArgumentException(MessageFactory.get("error.convert", obj, obj.getClass(), type));
@@ -494,9 +558,37 @@ public class ELSupport {
         }
     }
 
-    /**
-     *
-     */
+    private static boolean isFunctionalInterface(Class<?> type) {
+        return
+            type.isInterface() &&
+            Arrays.stream(type.getMethods())
+                  .filter(method -> isAbstract(method.getModifiers()) && !isInObject(method))
+                  .count() == 1;
+    }
+
+
+    private static boolean isInObject(Method method) {
+        switch (method.getName()) {
+            case "equals":
+                return
+                        method.getParameterCount() == 1 &&
+                        method.getParameterTypes()[0].equals(Object.class) &&
+                        method.getReturnType().equals(boolean.class);
+            case "hashCode":
+                return
+                        method.getParameterCount() == 0 &&
+                        method.getReturnType().equals(int.class);
+            case "toString":
+                return
+                        method.getParameterCount() == 0 &&
+                        method.getReturnType().equals(String.class);
+            default:
+                return false;
+        }
+    }
+
+
+
     public ELSupport() {
         super();
     }

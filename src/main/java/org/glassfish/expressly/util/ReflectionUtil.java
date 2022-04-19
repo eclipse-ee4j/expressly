@@ -542,7 +542,7 @@ public class ReflectionUtil {
         // TODO: This isn't pretty but it works. Significant refactoring would
         // be required to avoid the exception.
         try {
-            ELSupport.coerceToType(src, target);
+            ELSupport.coerceToType(null, src, target);
         } catch (Exception e) {
             return false;
         }

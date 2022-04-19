@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2021 Oracle and/or its affiliates and others.
  * All rights reserved.
  *
@@ -66,7 +67,7 @@ public class ExpressionFactoryImpl extends ExpressionFactory {
     @Override
     public <T> T coerceToType(Object obj, Class<T> type) {
         try {
-            return ELSupport.coerceToType(obj, type, isBackwardCompatible22);
+            return ELSupport.coerceToType(null, obj, type, isBackwardCompatible22);
         } catch (IllegalArgumentException ex) {
             throw new ELException(ex);
         }

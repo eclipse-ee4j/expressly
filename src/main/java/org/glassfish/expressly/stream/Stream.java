@@ -215,7 +215,7 @@ public class Stream {
                     queue = new PriorityQueue<Object>(16, new Comparator<Object>() {
                         @Override
                         public int compare(Object o1, Object o2) {
-                            return ELSupport.coerceToType(comparator.invoke(o1, o2), Integer.class);
+                            return ELSupport.coerceToType(null, comparator.invoke(o1, o2), Integer.class);
                         }
                     });
 

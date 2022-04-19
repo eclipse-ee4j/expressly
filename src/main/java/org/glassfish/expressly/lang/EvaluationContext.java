@@ -20,6 +20,7 @@ package org.glassfish.expressly.lang;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
@@ -134,9 +135,15 @@ public final class EvaluationContext extends ELContext {
         elContext.exitLambdaScope();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T> T convertToType(Object obj, Class<T> targetType) {
-        return elContext.convertToType(obj, targetType);
+        T convertedType = elContext.convertToType(obj, targetType);
+        if (convertedType instanceof BiConsumer) {
+            ((BiConsumer) convertedType).accept("org.glassfish.expressly.setElContext", this);
+        }
+
+        return convertedType;
     }
 
     @Override

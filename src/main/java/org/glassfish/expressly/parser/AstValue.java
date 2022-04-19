@@ -236,7 +236,7 @@ public final class AstValue extends SimpleNode {
                 value = targetValue;
             } else {
                 if (value != null || (targetType != null && targetType.isPrimitive())) {
-                    value = ELSupport.coerceToType(value, targetType);
+                    value = ELSupport.coerceToType(ctx.getELContext(), value, targetType);
                 }
             }
         }
