@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -46,17 +47,18 @@ public final class ValueExpressionLiteral extends ValueExpression implements Ext
         this.expectedType = expectedType;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Object getValue(ELContext context) {
+    public <T> T getValue(ELContext context) {
         if (expectedType != null) {
             try {
-                return context.convertToType(value, expectedType);
+                return (T) context.convertToType(value, expectedType);
             } catch (IllegalArgumentException ex) {
                 throw new ELException(ex);
             }
         }
 
-        return value;
+        return (T) value;
     }
 
     @Override

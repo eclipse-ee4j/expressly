@@ -78,7 +78,7 @@
         <dependency>
             <groupId>jakarta.el</groupId>
             <artifactId>jakarta.el-api</artifactId>
-            <version>5.0.0-RC1</version>
+            <version>5.0.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -137,6 +137,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>5.1.4</version>
                 <configuration>
+                	<supportIncrementalBuild>true</supportIncrementalBuild>
                     <instructions>
                         <Bundle-SymbolicName>org.glassfish.expressly</Bundle-SymbolicName>
                         <_include>-osgi.bundle</_include>
@@ -179,7 +180,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.1</version>
                 <configuration>
                     <release>11</release>
                     <compilerArgument>-Xlint:unchecked</compilerArgument>

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -16,12 +17,15 @@
 
 package org.glassfish.expressly.parser;
 
+import static org.glassfish.expressly.parser.ELParserTreeConstants.jjtNodeName;
+
 import org.glassfish.expressly.lang.ELSupport;
 import org.glassfish.expressly.lang.EvaluationContext;
 import org.glassfish.expressly.util.MessageFactory;
 
 import jakarta.el.ELException;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.ValueReference;
 
@@ -30,12 +34,10 @@ import jakarta.el.ValueReference;
  * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
  */
 public abstract class SimpleNode extends ELSupport implements Node {
-    protected Node parent;
-
-    protected Node[] children;
 
     protected int id;
-
+    protected Node parent;
+    protected Node[] children;
     protected String image;
 
     public SimpleNode(int i) {
@@ -51,8 +53,8 @@ public abstract class SimpleNode extends ELSupport implements Node {
     }
 
     @Override
-    public void jjtSetParent(Node n) {
-        parent = n;
+    public void jjtSetParent(Node node) {
+        parent = node;
     }
 
     @Override
@@ -79,7 +81,7 @@ public abstract class SimpleNode extends ELSupport implements Node {
 
     @Override
     public int jjtGetNumChildren() {
-        return (children == null) ? 0 : children.length;
+        return children == null ? 0 : children.length;
     }
 
     /*
@@ -90,10 +92,11 @@ public abstract class SimpleNode extends ELSupport implements Node {
 
     @Override
     public String toString() {
-        if (this.image != null) {
-            return ELParserTreeConstants.jjtNodeName[id] + "[" + this.image + "]";
+        if (image != null) {
+            return jjtNodeName[id] + "[" + this.image + "]";
         }
-        return ELParserTreeConstants.jjtNodeName[id];
+
+        return jjtNodeName[id];
     }
 
     public String toString(String prefix) {
@@ -103,7 +106,6 @@ public abstract class SimpleNode extends ELSupport implements Node {
     /*
      * Override this method if you want to customize how the node dumps out its children.
      */
-
     public void dump(String prefix) {
         System.out.println(toString(prefix));
         if (children != null) {
@@ -126,7 +128,7 @@ public abstract class SimpleNode extends ELSupport implements Node {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         throw new UnsupportedOperationException();
     }
 
@@ -153,20 +155,25 @@ public abstract class SimpleNode extends ELSupport implements Node {
     @Override
     public void accept(NodeVisitor visitor) throws ELException {
         visitor.visit(this);
-        if (this.children != null && this.children.length > 0) {
-            for (int i = 0; i < this.children.length; i++) {
+        if (children != null && children.length > 0) {
+            for (int i = 0; i < children.length; i++) {
                 this.children[i].accept(visitor);
             }
         }
     }
 
     @Override
-    public Object invoke(EvaluationContext ctx, Class[] paramTypes, Object[] paramValues) throws ELException {
+    public Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MethodInfo getMethodInfo(EvaluationContext ctx, Class[] paramTypes) throws ELException {
+    public MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MethodReference getMethodReference(EvaluationContext ctx) {
         throw new UnsupportedOperationException();
     }
 
@@ -175,34 +182,40 @@ public abstract class SimpleNode extends ELSupport implements Node {
         if (!(node instanceof SimpleNode)) {
             return false;
         }
-        SimpleNode n = (SimpleNode) node;
-        if (this.id != n.id) {
+
+        SimpleNode simpleNode = (SimpleNode) node;
+        if (this.id != simpleNode.id) {
             return false;
         }
-        if (this.children == null && n.children == null) {
+
+        if (this.children == null && simpleNode.children == null) {
             if (this.image == null) {
-                return n.image == null;
+                return simpleNode.image == null;
             }
-            return this.image.equals(n.image);
+            return this.image.equals(simpleNode.image);
         }
-        if (this.children == null || n.children == null) {
+
+        if (this.children == null || simpleNode.children == null) {
             // One is null and the other is non-null
             return false;
         }
-        if (this.children.length != n.children.length) {
+        if (this.children.length != simpleNode.children.length) {
             return false;
         }
+
         if (this.children.length == 0) {
             if (this.image == null) {
-                return n.image == null;
+                return simpleNode.image == null;
             }
-            return this.image.equals(n.image);
+            return this.image.equals(simpleNode.image);
         }
+
         for (int i = 0; i < this.children.length; i++) {
-            if (!this.children[i].equals(n.children[i])) {
+            if (!this.children[i].equals(simpleNode.children[i])) {
                 return false;
             }
         }
+
         return true;
     }
 

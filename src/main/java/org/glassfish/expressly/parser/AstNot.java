@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -30,14 +31,13 @@ public final class AstNot extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         return Boolean.class;
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        Object obj = this.children[0].getValue(ctx);
-        Boolean b = coerceToBoolean(obj);
-        return Boolean.valueOf(!b.booleanValue());
+        return Boolean.valueOf(!coerceToBoolean(
+            children[0].getValue(ctx)).booleanValue());
     }
 }

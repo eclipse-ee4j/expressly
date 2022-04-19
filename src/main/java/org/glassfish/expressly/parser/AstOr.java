@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -31,13 +32,11 @@ public final class AstOr extends BooleanNode {
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        Object obj = this.children[0].getValue(ctx);
-        Boolean b = coerceToBoolean(obj);
-        if (b.booleanValue()) {
-            return b;
+        Boolean value = coerceToBoolean(children[0].getValue(ctx));
+        if (value.booleanValue()) {
+            return value;
         }
-        obj = this.children[1].getValue(ctx);
-        b = coerceToBoolean(obj);
-        return b;
+
+        return coerceToBoolean(children[1].getValue(ctx));
     }
 }

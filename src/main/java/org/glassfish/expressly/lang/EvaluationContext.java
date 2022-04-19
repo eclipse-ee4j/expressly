@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2021 Oracle and/or its affiliates and others.
  * All rights reserved.
  *
@@ -19,6 +20,7 @@ package org.glassfish.expressly.lang;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import jakarta.el.ELContext;
 import jakarta.el.ELResolver;
@@ -59,7 +61,7 @@ public final class EvaluationContext extends ELContext {
     }
 
     @Override
-    public Object getContext(Class key) {
+    public Object getContext(Class<?> key) {
         return elContext.getContext(key);
     }
 
@@ -74,7 +76,7 @@ public final class EvaluationContext extends ELContext {
     }
 
     @Override
-    public void putContext(Class key, Object contextObject) {
+    public void putContext(Class<?> key, Object contextObject) {
         elContext.putContext(key, contextObject);
     }
 
@@ -133,9 +135,15 @@ public final class EvaluationContext extends ELContext {
         elContext.exitLambdaScope();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T> T convertToType(Object obj, Class<T> targetType) {
-        return elContext.convertToType(obj, targetType);
+        T convertedType = elContext.convertToType(obj, targetType);
+        if (convertedType instanceof BiConsumer) {
+            ((BiConsumer) convertedType).accept("org.glassfish.expressly.setElContext", this);
+        }
+
+        return convertedType;
     }
 
     @Override

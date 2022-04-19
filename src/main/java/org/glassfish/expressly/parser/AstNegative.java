@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,13 +34,13 @@ public final class AstNegative extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         return Number.class;
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        Object obj = this.children[0].getValue(ctx);
+        Object obj = children[0].getValue(ctx);
 
         if (obj == null) {
             return Long.valueOf(0);
@@ -56,7 +57,8 @@ public final class AstNegative extends SimpleNode {
             }
             return Long.valueOf(-Long.parseLong((String) obj));
         }
-        Class type = obj.getClass();
+
+        Class<?> type = obj.getClass();
         if (obj instanceof Long || Long.TYPE == type) {
             return Long.valueOf(-((Long) obj).longValue());
         }

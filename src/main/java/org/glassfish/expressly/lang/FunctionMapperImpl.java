@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -16,6 +17,9 @@
 
 package org.glassfish.expressly.lang;
 
+import static org.glassfish.expressly.util.ReflectionUtil.toTypeArray;
+import static org.glassfish.expressly.util.ReflectionUtil.toTypeNameArray;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -24,186 +28,144 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.glassfish.expressly.util.ReflectionUtil;
-
 import jakarta.el.FunctionMapper;
 
 /**
  * @author Jacob Hookom [jacob@hookom.net]
- * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
+ * @author kchung
  */
 public class FunctionMapperImpl extends FunctionMapper implements Externalizable {
 
     private static final long serialVersionUID = 1L;
 
-    protected Map<String, Function> functions = null;
+    protected Map<String, Function> functions;
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see FunctionMapper#resolveFunction(java.lang.String, java.lang.String)
-     */
     @Override
     public Method resolveFunction(String prefix, String localName) {
-        if (this.functions != null) {
-            Function f = this.functions.get(prefix + ":" + localName);
-            return f.getMethod();
+        if (functions == null) {
+            return null;
         }
-        return null;
+
+        return functions.get(prefix + ":" + localName).getMethod();
     }
 
-    public void addFunction(String prefix, String localName, Method m) {
-        if (this.functions == null) {
-            this.functions = new HashMap<String, Function>();
+    public void addFunction(String prefix, String localName, Method method) {
+        if (functions == null) {
+            functions = new HashMap<>();
         }
-        Function f = new Function(prefix, localName, m);
+
+        Function function = new Function(prefix, localName, method);
         synchronized (this) {
-            this.functions.put(prefix + ":" + localName, f);
+            functions.put(prefix + ":" + localName, function);
         }
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(this.functions);
+        out.writeObject(functions);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    // Safe cast
     @Override
     @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        this.functions = (Map<String, Function>) in.readObject();
+        functions = (Map<String, Function>) in.readObject();
     }
 
     public static class Function implements Externalizable {
 
-        protected transient Method m;
+        protected transient Method method;
         protected String owner;
         protected String name;
         protected String[] types;
         protected String prefix;
         protected String localName;
 
-        /**
-         *
-         */
-        public Function(String prefix, String localName, Method m) {
+        public Function(String prefix, String localName, Method method) {
             if (localName == null) {
                 throw new NullPointerException("LocalName cannot be null");
             }
-            if (m == null) {
+
+            if (method == null) {
                 throw new NullPointerException("Method cannot be null");
             }
             this.prefix = prefix;
             this.localName = localName;
-            this.m = m;
+            this.method = method;
         }
 
         public Function() {
             // for serialization
         }
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-         */
         @Override
         public void writeExternal(ObjectOutput out) throws IOException {
+            out.writeUTF((prefix != null) ? prefix : "");
+            out.writeUTF(localName);
 
-            out.writeUTF((this.prefix != null) ? this.prefix : "");
-            out.writeUTF(this.localName);
-
-            if (this.owner != null) {
-                out.writeUTF(this.owner);
+            if (owner != null) {
+                out.writeUTF(owner);
             } else {
-                out.writeUTF(this.m.getDeclaringClass().getName());
+                out.writeUTF(method.getDeclaringClass().getName());
             }
-            if (this.name != null) {
-                out.writeUTF(this.name);
+            if (name != null) {
+                out.writeUTF(name);
             } else {
-                out.writeUTF(this.m.getName());
+                out.writeUTF(method.getName());
             }
-            if (this.types != null) {
-                out.writeObject(this.types);
+            if (types != null) {
+                out.writeObject(types);
             } else {
-                out.writeObject(ReflectionUtil.toTypeNameArray(this.m.getParameterTypes()));
+                out.writeObject(toTypeNameArray(method.getParameterTypes()));
             }
         }
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-         */
         @Override
         public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-
-            this.prefix = in.readUTF();
-            if ("".equals(this.prefix)) {
-                this.prefix = null;
+            prefix = in.readUTF();
+            if ("".equals(prefix)) {
+                prefix = null;
             }
-            this.localName = in.readUTF();
-            this.owner = in.readUTF();
-            this.name = in.readUTF();
-            this.types = (String[]) in.readObject();
+            localName = in.readUTF();
+            owner = in.readUTF();
+            name = in.readUTF();
+            types = (String[]) in.readObject();
         }
 
         public Method getMethod() {
-            if (this.m == null) {
+            if (method == null) {
                 try {
-                    Class<?> t = Class.forName(this.owner, false, Thread.currentThread().getContextClassLoader());
-                    Class[] p = ReflectionUtil.toTypeArray(this.types);
-                    this.m = t.getMethod(this.name, p);
+                    this.method = Class.forName(owner, false, Thread.currentThread().getContextClassLoader())
+                                       .getMethod(name, toTypeArray(types));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            return this.m;
+
+            return method;
         }
 
         public boolean matches(String prefix, String localName) {
-            if (this.prefix != null) {
-                if (prefix == null) {
-                    return false;
-                }
-                if (!this.prefix.equals(prefix)) {
+            if (prefix != null) {
+                if ((prefix == null) || !prefix.equals(prefix)) {
                     return false;
                 }
             }
-            return this.localName.equals(localName);
+
+            return localName.equals(localName);
         }
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Function) {
                 return this.hashCode() == obj.hashCode();
             }
+
             return false;
         }
 
-        /*
-         * (non-Javadoc)
-         *
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
-            return (this.prefix + this.localName).hashCode();
+            return (prefix + localName).hashCode();
         }
     }
 

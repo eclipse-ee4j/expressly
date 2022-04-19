@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,24 +34,34 @@ public final class AstEmpty extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         return Boolean.class;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
         Object obj = this.children[0].getValue(ctx);
         if (obj == null) {
             return Boolean.TRUE;
-        } else if (obj instanceof String) {
+        }
+
+        if (obj instanceof String) {
             return Boolean.valueOf(((String) obj).length() == 0);
-        } else if (obj instanceof Object[]) {
+        }
+
+        if (obj instanceof Object[]) {
             return Boolean.valueOf(((Object[]) obj).length == 0);
-        } else if (obj instanceof Collection) {
+        }
+
+        if (obj instanceof Collection) {
             return Boolean.valueOf(((Collection) obj).isEmpty());
-        } else if (obj instanceof Map) {
+        }
+
+        if (obj instanceof Map) {
             return Boolean.valueOf(((Map) obj).isEmpty());
         }
+
         return Boolean.FALSE;
     }
 }

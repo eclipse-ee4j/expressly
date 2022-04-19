@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2021 Payara Services Ltd.
+ * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0, which is available at
@@ -26,6 +27,7 @@ import jakarta.el.ELException;
  * @version $Change: 181177 $$DateTime: 2001/06/26 08:45:09 $$Author: kchung $
  */
 public final class AstString extends SimpleNode {
+
     public AstString(int id) {
         super(id);
     }
@@ -33,20 +35,21 @@ public final class AstString extends SimpleNode {
     private String string;
 
     public String getString() {
-        if (this.string == null) {
-            this.string = this.image.substring(1, this.image.length() - 1);
+        if (string == null) {
+            string = image.substring(1, image.length() - 1);
         }
-        return this.string;
+
+        return string;
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         return String.class;
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        return this.getString();
+        return getString();
     }
 
     @Override
@@ -55,6 +58,7 @@ public final class AstString extends SimpleNode {
             this.image = image;
             return;
         }
+
         int size = image.length();
         StringBuilder buf = new StringBuilder(size);
         for (int i = 0; i < size; i++) {
@@ -68,6 +72,7 @@ public final class AstString extends SimpleNode {
             }
             buf.append(c);
         }
+
         this.image = buf.toString();
     }
 }

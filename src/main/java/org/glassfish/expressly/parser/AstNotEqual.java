@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -31,8 +32,8 @@ public final class AstNotEqual extends BooleanNode {
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        Object obj0 = this.children[0].getValue(ctx);
-        Object obj1 = this.children[1].getValue(ctx);
-        return Boolean.valueOf(!equals(obj0, obj1));
+        return Boolean.valueOf(!equals(
+            children[0].getValue(ctx),
+            children[1].getValue(ctx)));
     }
 }

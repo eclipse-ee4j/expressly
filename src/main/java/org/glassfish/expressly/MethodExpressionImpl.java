@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -38,6 +39,7 @@ import jakarta.el.FunctionMapper;
 import jakarta.el.MethodExpression;
 import jakarta.el.MethodInfo;
 import jakarta.el.MethodNotFoundException;
+import jakarta.el.MethodReference;
 import jakarta.el.PropertyNotFoundException;
 import jakarta.el.VariableMapper;
 
@@ -77,9 +79,9 @@ import jakarta.el.VariableMapper;
 public final class MethodExpressionImpl extends MethodExpression implements Externalizable {
 
     private Class<?> expectedType;
-    private String expr;
-    private FunctionMapper fnMapper;
-    private VariableMapper varMapper;
+    private String expression;
+    private FunctionMapper functionMapper;
+    private VariableMapper variableMapper;
     private Class<?>[] paramTypes;
 
     private transient Node node;
@@ -98,10 +100,10 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     public MethodExpressionImpl(String expr, Node node, FunctionMapper fnMapper, VariableMapper varMapper, Class<?> expectedType, Class<?>[] paramTypes) {
         super();
-        this.expr = expr;
+        this.expression = expr;
         this.node = node;
-        this.fnMapper = fnMapper;
-        this.varMapper = varMapper;
+        this.functionMapper = fnMapper;
+        this.variableMapper = varMapper;
         this.expectedType = expectedType;
         this.paramTypes = paramTypes;
     }
@@ -156,7 +158,7 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     @Override
     public String getExpressionString() {
-        return expr;
+        return expression;
     }
 
     /**
@@ -176,7 +178,16 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     @Override
     public MethodInfo getMethodInfo(ELContext context) throws PropertyNotFoundException, MethodNotFoundException, ELException {
-        return getNode().getMethodInfo(new EvaluationContext(context, fnMapper, varMapper), paramTypes);
+        return getNode().getMethodInfo(new EvaluationContext(context, functionMapper, variableMapper), paramTypes);
+    }
+
+    @Override
+    public MethodReference getMethodReference(ELContext context) {
+        EvaluationContext ctx = new EvaluationContext(context, functionMapper, variableMapper);
+        ctx.notifyBeforeEvaluation(getExpressionString());
+        MethodReference methodReference = getNode().getMethodReference(ctx);
+        ctx.notifyAfterEvaluation(getExpressionString());
+        return methodReference;
     }
 
     /**
@@ -185,7 +196,7 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     private Node getNode() throws ELException {
         if (node == null) {
-            node = ExpressionBuilder.createNode(expr);
+            node = ExpressionBuilder.createNode(expression);
         }
 
         return node;
@@ -231,12 +242,12 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     @Override
     public Object invoke(ELContext context, Object[] params) throws PropertyNotFoundException, MethodNotFoundException, ELException {
-        EvaluationContext ctx = new EvaluationContext(context, fnMapper, varMapper);
-        ctx.notifyBeforeEvaluation(expr);
+        EvaluationContext ctx = new EvaluationContext(context, functionMapper, variableMapper);
+        ctx.notifyBeforeEvaluation(expression);
 
         Object obj = getNode().invoke(ctx, paramTypes, params);
 
-        ctx.notifyAfterEvaluation(expr);
+        ctx.notifyAfterEvaluation(expression);
         return obj;
     }
 
@@ -247,7 +258,7 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
      */
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        expr = in.readUTF();
+        expression = in.readUTF();
         String type = in.readUTF();
 
         if (!"".equals(type)) {
@@ -255,22 +266,17 @@ public final class MethodExpressionImpl extends MethodExpression implements Exte
         }
 
         paramTypes = toTypeArray(((String[]) in.readObject()));
-        fnMapper = (FunctionMapper) in.readObject();
-        varMapper = (VariableMapper) in.readObject();
+        functionMapper = (FunctionMapper) in.readObject();
+        variableMapper = (VariableMapper) in.readObject();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeUTF(expr);
+        out.writeUTF(expression);
         out.writeUTF(expectedType != null ? expectedType.getName() : "");
         out.writeObject(toTypeNameArray(paramTypes));
-        out.writeObject(fnMapper);
-        out.writeObject(varMapper);
+        out.writeObject(functionMapper);
+        out.writeObject(variableMapper);
     }
 
     @Override

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -16,14 +17,15 @@
 
 package org.glassfish.expressly.util;
 
+import static java.beans.Introspector.getBeanInfo;
+import static java.lang.reflect.Modifier.isPublic;
+
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,10 +48,27 @@ public class ReflectionUtil {
 
     protected static final String[] EMPTY_STRING = new String[0];
 
-    protected static final String[] PRIMITIVE_NAMES = new String[] { "boolean", "byte", "char", "double", "float", "int", "long", "short", "void" };
+    protected static final String[] PRIMITIVE_NAMES = new String[] {
+        "boolean",
+        "byte",
+        "char",
+        "double",
+        "float",
+        "int",
+        "long",
+        "short",
+        "void" };
 
-    protected static final Class[] PRIMITIVES = new Class[] { boolean.class, byte.class, char.class, double.class, float.class, int.class, long.class,
-            short.class, Void.TYPE };
+    protected static final Class<?>[] PRIMITIVES = new Class[] {
+        boolean.class,
+        byte.class,
+        char.class,
+        double.class,
+        float.class,
+        int.class,
+        long.class,
+        short.class,
+        Void.TYPE };
 
     /**
      *
@@ -58,66 +77,80 @@ public class ReflectionUtil {
         super();
     }
 
-    public static Class forName(String name) throws ClassNotFoundException {
-        if (null == name || "".equals(name)) {
+    public static Class<?> forName(String name) throws ClassNotFoundException {
+        if (name == null || "".equals(name)) {
             return null;
         }
-        Class c = forNamePrimitive(name);
-        if (c == null) {
+
+        Class<?> clazz = forNamePrimitive(name);
+        if (clazz == null) {
             if (name.endsWith("[]")) {
-                String nc = name.substring(0, name.length() - 2);
-                c = Class.forName(nc, true, Thread.currentThread().getContextClassLoader());
-                c = Array.newInstance(c, 0).getClass();
+                clazz = Array.newInstance(
+                                  Class.forName(
+                                      name.substring(0, name.length() - 2),
+                                      true,
+                                      Thread.currentThread().getContextClassLoader()),
+                                  0)
+                              .getClass();
             } else {
-                c = Class.forName(name, true, Thread.currentThread().getContextClassLoader());
+                clazz = Class.forName(
+                            name,
+                            true,
+                            Thread.currentThread().getContextClassLoader());
             }
         }
-        return c;
+
+        return clazz;
     }
 
-    protected static Class forNamePrimitive(String name) {
+    protected static Class<?> forNamePrimitive(String name) {
         if (name.length() <= 8) {
-            int p = Arrays.binarySearch(PRIMITIVE_NAMES, name);
-            if (p >= 0) {
-                return PRIMITIVES[p];
+            int index = Arrays.binarySearch(PRIMITIVE_NAMES, name);
+            if (index >= 0) {
+                return PRIMITIVES[index];
             }
         }
+
         return null;
     }
 
     /**
      * Converts an array of Class names to Class types
      *
-     * @param s
+     * @param classNames
      * @return The array of Classes
      * @throws ClassNotFoundException
      */
-    public static Class[] toTypeArray(String[] s) throws ClassNotFoundException {
-        if (s == null) {
+    public static Class<?>[] toTypeArray(String[] classNames) throws ClassNotFoundException {
+        if (classNames == null) {
             return null;
         }
-        Class[] c = new Class[s.length];
-        for (int i = 0; i < s.length; i++) {
-            c[i] = forName(s[i]);
+
+        Class<?>[] typeArray = new Class[classNames.length];
+        for (int i = 0; i < classNames.length; i++) {
+            typeArray[i] = forName(classNames[i]);
         }
-        return c;
+
+        return typeArray;
     }
 
     /**
      * Converts an array of Class types to Class names
      *
-     * @param c
+     * @param classTypes
      * @return The array of Classes
      */
-    public static String[] toTypeNameArray(Class[] c) {
-        if (c == null) {
+    public static String[] toTypeNameArray(Class<?>[] classTypes) {
+        if (classTypes == null) {
             return null;
         }
-        String[] s = new String[c.length];
-        for (int i = 0; i < c.length; i++) {
-            s[i] = c[i].getName();
+
+        String[] classNames = new String[classTypes.length];
+        for (int i = 0; i < classTypes.length; i++) {
+            classNames[i] = classTypes[i].getName();
         }
-        return s;
+
+        return classNames;
     }
 
     /**
@@ -130,29 +163,28 @@ public class ReflectionUtil {
     public static PropertyDescriptor getPropertyDescriptor(Object base, Object property) throws ELException, PropertyNotFoundException {
         String name = ELSupport.coerceToString(property);
         try {
-            PropertyDescriptor[] desc = Introspector.getBeanInfo(base.getClass()).getPropertyDescriptors();
-            for (int i = 0; i < desc.length; i++) {
-                if (desc[i].getName().equals(name)) {
-                    return desc[i];
+            PropertyDescriptor[] descriptor = getBeanInfo(base.getClass()).getPropertyDescriptors();
+            for (int i = 0; i < descriptor.length; i++) {
+                if (descriptor[i].getName().equals(name)) {
+                    return descriptor[i];
                 }
             }
         } catch (IntrospectionException ie) {
             throw new ELException(ie);
         }
+
         throw new PropertyNotFoundException(MessageFactory.get("error.property.notfound", base, name));
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    public static Object invokeMethod(ELContext context, Method m, Object base, Object[] params) {
+    public static Object invokeMethod(ELContext context, Method method, Object base, Object[] params) {
+        Object[] parameters = buildParameters(context, method.getParameterTypes(), method.isVarArgs(), params);
 
-        Object[] parameters = buildParameters(context, m.getParameterTypes(), m.isVarArgs(), params);
         try {
-            return m.invoke(base, parameters);
-        } catch (IllegalAccessException iae) {
-            throw new ELException(iae);
-        } catch (IllegalArgumentException iae) {
+            return method.invoke(base, parameters);
+        } catch (IllegalAccessException | IllegalArgumentException iae) {
             throw new ELException(iae);
         } catch (InvocationTargetException ite) {
             throw new ELException(ite.getCause());
@@ -163,7 +195,6 @@ public class ReflectionUtil {
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
     public static Method findMethod(Class<?> clazz, String methodName, Class<?>[] paramTypes, Object[] paramValues) {
-
         if (clazz == null || methodName == null) {
             throw new MethodNotFoundException(MessageFactory.get("error.method.notfound", clazz, methodName, paramString(paramTypes)));
         }
@@ -172,45 +203,31 @@ public class ReflectionUtil {
             paramTypes = getTypesFromValues(paramValues);
         }
 
-        Method[] methods = clazz.getMethods();
-
-        List<Wrapper> wrappers = Wrapper.wrap(methods, methodName);
-
-        Wrapper result = findWrapper(clazz, wrappers, methodName, paramTypes, paramValues);
-
+        Wrapper result = findWrapper(clazz, Wrapper.wrap(clazz.getMethods(), methodName), methodName, paramTypes, paramValues);
         if (result == null) {
             return null;
         }
+
         return getMethod(clazz, (Method) result.unWrap());
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    private static Wrapper findWrapper(Class<?> clazz, List<Wrapper> wrappers, String name, Class<?>[] paramTypes, Object[] paramValues) {
-
+    private static Wrapper findWrapper(Class<?> clazz, List<Wrapper> wrappers, String name, Class<?>[] requiredParamTypes, Object[] requiredParamValues) {
         List<Wrapper> assignableCandidates = new ArrayList<Wrapper>();
         List<Wrapper> coercibleCandidates = new ArrayList<Wrapper>();
         List<Wrapper> varArgsCandidates = new ArrayList<Wrapper>();
 
-        int paramCount;
-        if (paramTypes == null) {
-            paramCount = 0;
-        } else {
-            paramCount = paramTypes.length;
-        }
+        int requiredParamCount = getParamCount(requiredParamTypes);
 
-        for (Wrapper w : wrappers) {
-            Class<?>[] mParamTypes = w.getParameterTypes();
-            int mParamCount;
-            if (mParamTypes == null) {
-                mParamCount = 0;
-            } else {
-                mParamCount = mParamTypes.length;
-            }
+        for (Wrapper wrapper : wrappers) {
+            Class<?>[] candidateParamTypes = wrapper.getParameterTypes();
+
+            int canidateParamCount = getParamCount(candidateParamTypes);
 
             // Check the number of parameters
-            if (!(paramCount == mParamCount || (w.isVarArgs() && paramCount >= mParamCount - 1))) {
+            if (!(requiredParamCount == canidateParamCount || (wrapper.isVarArgs() && requiredParamCount >= canidateParamCount - 1))) {
                 // Method has wrong number of parameters
                 continue;
             }
@@ -220,34 +237,38 @@ public class ReflectionUtil {
             boolean coercible = false;
             boolean varArgs = false;
             boolean noMatch = false;
-            for (int i = 0; i < mParamCount; i++) {
-                if (i == (mParamCount - 1) && w.isVarArgs()) {
+
+            for (int i = 0; i < canidateParamCount; i++) {
+                if (i == (canidateParamCount - 1) && wrapper.isVarArgs()) {
                     varArgs = true;
-                    // exact var array type match
-                    if (mParamCount == paramCount) {
-                        if (mParamTypes[i] == paramTypes[i]) {
+
+                    // Exact var array type match
+                    if (canidateParamCount == requiredParamCount) {
+                        if (candidateParamTypes[i] == requiredParamTypes[i]) {
                             continue;
                         }
                     }
 
-                    // unwrap the array's component type
-                    Class<?> varType = mParamTypes[i].getComponentType();
-                    for (int j = i; j < paramCount; j++) {
-                        if (!isAssignableFrom(paramTypes[j], varType)
-                                && !(paramValues != null && j < paramValues.length && isCoercibleFrom(paramValues[j], varType))) {
+                    // Unwrap the array's component type
+                    Class<?> varType = candidateParamTypes[i].getComponentType();
+                    for (int j = i; j < requiredParamCount; j++) {
+                        if (
+                           !isAssignableFrom(requiredParamTypes[j], varType) &&
+                           !(requiredParamValues != null && j < requiredParamValues.length && isCoercibleFrom(requiredParamValues[j], varType))) {
                             noMatch = true;
                             break;
                         }
                     }
-                } else if (mParamTypes[i].equals(paramTypes[i])) {
-                } else if (isAssignableFrom(paramTypes[i], mParamTypes[i])) {
+                } else if (candidateParamTypes[i].equals(requiredParamTypes[i])) {
+                    // no-op
+                } else if (isAssignableFrom(requiredParamTypes[i], candidateParamTypes[i])) {
                     assignable = true;
                 } else {
-                    if (paramValues == null || i >= paramValues.length) {
+                    if (requiredParamValues == null || i >= requiredParamValues.length) {
                         noMatch = true;
                         break;
                     } else {
-                        if (isCoercibleFrom(paramValues[i], mParamTypes[i])) {
+                        if (isCoercibleFrom(requiredParamValues[i], candidateParamTypes[i])) {
                             coercible = true;
                         } else {
                             noMatch = true;
@@ -256,35 +277,47 @@ public class ReflectionUtil {
                     }
                 }
             }
+
             if (noMatch) {
                 continue;
             }
 
             if (varArgs) {
-                varArgsCandidates.add(w);
+                varArgsCandidates.add(wrapper);
             } else if (coercible) {
-                coercibleCandidates.add(w);
+                coercibleCandidates.add(wrapper);
             } else if (assignable) {
-                assignableCandidates.add(w);
+                assignableCandidates.add(wrapper);
             } else {
                 // If a method is found where every parameter matches exactly,
                 // return it
-                return w;
+                return wrapper;
             }
 
         }
 
-        String errorMsg = MessageFactory.get("error.method.ambiguous", clazz, name, paramString(paramTypes));
+        String errorMsg = MessageFactory.get("error.method.ambiguous", clazz, name, paramString(requiredParamTypes));
         if (!assignableCandidates.isEmpty()) {
-            return findMostSpecificWrapper(assignableCandidates, paramTypes, false, errorMsg);
-        } else if (!coercibleCandidates.isEmpty()) {
-            return findMostSpecificWrapper(coercibleCandidates, paramTypes, true, errorMsg);
-        } else if (!varArgsCandidates.isEmpty()) {
-            return findMostSpecificWrapper(varArgsCandidates, paramTypes, true, errorMsg);
-        } else {
-            throw new MethodNotFoundException(MessageFactory.get("error.method.notfound", clazz, name, paramString(paramTypes)));
+            return findMostSpecificWrapper(assignableCandidates, requiredParamTypes, false, errorMsg);
         }
 
+        if (!coercibleCandidates.isEmpty()) {
+            return findMostSpecificWrapper(coercibleCandidates, requiredParamTypes, true, errorMsg);
+        }
+
+        if (!varArgsCandidates.isEmpty()) {
+            return findMostSpecificWrapper(varArgsCandidates, requiredParamTypes, true, errorMsg);
+        }
+
+        throw new MethodNotFoundException(MessageFactory.get("error.method.notfound", clazz, name, paramString(requiredParamTypes)));
+    }
+
+    private static int getParamCount(Class<?>[] paramTypes) {
+        if (paramTypes == null) {
+            return 0;
+        }
+
+        return paramTypes.length;
     }
 
     /*
@@ -374,63 +407,80 @@ public class ReflectionUtil {
     private static int isMoreSpecific(Class<?> type1, Class<?> type2, Class<?> matchingType, boolean elSpecific) {
         type1 = getBoxingTypeIfPrimitive(type1);
         type2 = getBoxingTypeIfPrimitive(type2);
+
         if (type2.isAssignableFrom(type1)) {
             return 1;
-        } else if (type1.isAssignableFrom(type2)) {
-            return -1;
-        } else {
-            if (elSpecific) {
-                /*
-                 * Number will be treated as more specific
-                 *
-                 * ASTInteger only return Long or BigInteger, no Byte / Short / Integer. ASTFloatingPoint also.
-                 *
-                 */
-                if (matchingType != null && Number.class.isAssignableFrom(matchingType)) {
-                    boolean b1 = Number.class.isAssignableFrom(type1) || type1.isPrimitive();
-                    boolean b2 = Number.class.isAssignableFrom(type2) || type2.isPrimitive();
-                    if (b1 && !b2) {
-                        return 1;
-                    } else if (b2 && !b1) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                }
-
-                return 0;
-            } else {
-                return 0;
-            }
         }
+
+        if (type1.isAssignableFrom(type2)) {
+            return -1;
+        }
+
+        if (!elSpecific) {
+            return 0;
+        }
+
+        /*
+         * Number will be treated as more specific
+         *
+         * ASTInteger only return Long or BigInteger, no Byte / Short / Integer. ASTFloatingPoint also.
+         *
+         */
+        if (matchingType != null && Number.class.isAssignableFrom(matchingType)) {
+            boolean b1 = Number.class.isAssignableFrom(type1) || type1.isPrimitive();
+            boolean b2 = Number.class.isAssignableFrom(type2) || type2.isPrimitive();
+
+            if (b1 && !b2) {
+                return 1;
+            }
+
+            if (b2 && !b1) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        return 0;
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
     private static Class<?> getBoxingTypeIfPrimitive(Class<?> clazz) {
-        if (clazz.isPrimitive()) {
-            if (clazz == Boolean.TYPE) {
-                return Boolean.class;
-            } else if (clazz == Character.TYPE) {
-                return Character.class;
-            } else if (clazz == Byte.TYPE) {
-                return Byte.class;
-            } else if (clazz == Short.TYPE) {
-                return Short.class;
-            } else if (clazz == Integer.TYPE) {
-                return Integer.class;
-            } else if (clazz == Long.TYPE) {
-                return Long.class;
-            } else if (clazz == Float.TYPE) {
-                return Float.class;
-            } else {
-                return Double.class;
-            }
-        } else {
+        if (!clazz.isPrimitive()) {
             return clazz;
         }
 
+        if (clazz == Boolean.TYPE) {
+            return Boolean.class;
+        }
+
+        if (clazz == Character.TYPE) {
+            return Character.class;
+        }
+
+        if (clazz == Byte.TYPE) {
+            return Byte.class;
+        }
+
+        if (clazz == Short.TYPE) {
+            return Short.class;
+        }
+
+        if (clazz == Integer.TYPE) {
+            return Integer.class;
+        }
+
+        if (clazz == Long.TYPE) {
+            return Long.class;
+        }
+
+        if (clazz == Float.TYPE) {
+            return Float.class;
+        }
+
+        return Double.class;
     }
 
     /*
@@ -452,19 +502,22 @@ public class ReflectionUtil {
      */
     private static final String paramString(Class<?>[] types) {
         if (types != null) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder paramString = new StringBuilder();
             for (int i = 0; i < types.length; i++) {
                 if (types[i] == null) {
-                    sb.append("null, ");
+                    paramString.append("null, ");
                 } else {
-                    sb.append(types[i].getName()).append(", ");
+                    paramString.append(types[i].getName()).append(", ");
                 }
             }
-            if (sb.length() > 2) {
-                sb.setLength(sb.length() - 2);
+
+            if (paramString.length() > 2) {
+                paramString.setLength(paramString.length() - 2);
             }
-            return sb.toString();
+
+            return paramString.toString();
         }
+
         return null;
     }
 
@@ -479,9 +532,7 @@ public class ReflectionUtil {
             return true;
         }
 
-        target = getBoxingTypeIfPrimitive(target);
-
-        return target.isAssignableFrom(src);
+        return getBoxingTypeIfPrimitive(target).isAssignableFrom(src);
     }
 
     /*
@@ -491,17 +542,18 @@ public class ReflectionUtil {
         // TODO: This isn't pretty but it works. Significant refactoring would
         // be required to avoid the exception.
         try {
-            ELSupport.coerceToType(src, target);
+            ELSupport.coerceToType(null, src, target);
         } catch (Exception e) {
             return false;
         }
+
         return true;
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    private static Class<?>[] getTypesFromValues(Object[] values) {
+    public static Class<?>[] getTypesFromValues(Object[] values) {
         if (values == null) {
             return null;
         }
@@ -514,6 +566,7 @@ public class ReflectionUtil {
                 result[i] = values[i].getClass();
             }
         }
+
         return result;
     }
 
@@ -525,75 +578,82 @@ public class ReflectionUtil {
      * therefore inaccessible. To correct this, a version of the same method must be found in a superclass or interface.
      *
      */
-    static Method getMethod(Class<?> type, Method m) {
-        if (m == null || Modifier.isPublic(type.getModifiers())) {
-            return m;
+    static Method getMethod(Class<?> type, Method method) {
+        if (method == null || isPublic(type.getModifiers())) {
+            return method;
         }
-        Class<?>[] inf = type.getInterfaces();
-        Method mp = null;
-        for (int i = 0; i < inf.length; i++) {
+
+        Class<?>[] interfaces = type.getInterfaces();
+        Method publicMethod = null;
+        for (int i = 0; i < interfaces.length; i++) {
             try {
-                mp = inf[i].getMethod(m.getName(), m.getParameterTypes());
-                mp = getMethod(mp.getDeclaringClass(), mp);
-                if (mp != null) {
-                    return mp;
+                publicMethod = interfaces[i].getMethod(method.getName(), method.getParameterTypes());
+                publicMethod = getMethod(publicMethod.getDeclaringClass(), publicMethod);
+                if (publicMethod != null) {
+                    return publicMethod;
                 }
             } catch (NoSuchMethodException e) {
                 // Ignore
             }
         }
-        Class<?> sup = type.getSuperclass();
-        if (sup != null) {
+
+        Class<?> superClass = type.getSuperclass();
+        if (superClass != null) {
             try {
-                mp = sup.getMethod(m.getName(), m.getParameterTypes());
-                mp = getMethod(mp.getDeclaringClass(), mp);
-                if (mp != null) {
-                    return mp;
+                publicMethod = superClass.getMethod(method.getName(), method.getParameterTypes());
+                publicMethod = getMethod(publicMethod.getDeclaringClass(), publicMethod);
+                if (publicMethod != null) {
+                    return publicMethod;
                 }
             } catch (NoSuchMethodException e) {
                 // Ignore
             }
         }
+
         return null;
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    static Constructor<?> getConstructor(Class<?> type, Constructor<?> c) {
-        if (c == null || Modifier.isPublic(type.getModifiers())) {
-            return c;
+    static Constructor<?> getConstructor(Class<?> type, Constructor<?> constructor) {
+        if (constructor == null || isPublic(type.getModifiers())) {
+            return constructor;
         }
-        Constructor<?> cp = null;
-        Class<?> sup = type.getSuperclass();
-        if (sup != null) {
+
+        Constructor<?> publicConstructor = null;
+        Class<?> superClass = type.getSuperclass();
+        if (superClass != null) {
             try {
-                cp = sup.getConstructor(c.getParameterTypes());
-                cp = getConstructor(cp.getDeclaringClass(), cp);
-                if (cp != null) {
-                    return cp;
+                publicConstructor = superClass.getConstructor(constructor.getParameterTypes());
+                publicConstructor = getConstructor(publicConstructor.getDeclaringClass(), publicConstructor);
+                if (publicConstructor != null) {
+                    return publicConstructor;
                 }
             } catch (NoSuchMethodException e) {
                 // Ignore
             }
         }
+
         return null;
     }
 
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    static Object[] buildParameters(ELContext context, Class<?>[] parameterTypes, boolean isVarArgs, Object[] params) {
+    public static Object[] buildParameters(ELContext context, Class<?>[] parameterTypes, boolean isVarArgs, Object[] params) {
         Object[] parameters = null;
         if (parameterTypes.length > 0) {
             parameters = new Object[parameterTypes.length];
             int paramCount = params == null ? 0 : params.length;
             if (isVarArgs) {
                 int varArgIndex = parameterTypes.length - 1;
+
                 // First argCount-1 parameters are standard
                 for (int i = 0; (i < varArgIndex && i < paramCount); i++) {
                     parameters[i] = context.convertToType(params[i], parameterTypes[i]);
                 }
+
                 // Last parameter is the varargs
                 if (parameterTypes.length == paramCount && parameterTypes[varArgIndex] == params[varArgIndex].getClass()) {
                     parameters[varArgIndex] = params[varArgIndex];
@@ -611,6 +671,7 @@ public class ReflectionUtil {
                 }
             }
         }
+
         return parameters;
     }
 
@@ -626,14 +687,7 @@ public class ReflectionUtil {
                     result.add(new MethodWrapper(method));
                 }
             }
-            return result;
-        }
 
-        public static List<Wrapper> wrap(Constructor<?>[] constructors) {
-            List<Wrapper> result = new ArrayList<>();
-            for (Constructor<?> constructor : constructors) {
-                result.add(new ConstructorWrapper(constructor));
-            }
             return result;
         }
 
@@ -650,61 +704,30 @@ public class ReflectionUtil {
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
     private static class MethodWrapper extends Wrapper {
-        private final Method m;
+        private final Method method;
 
-        public MethodWrapper(Method m) {
-            this.m = m;
+        public MethodWrapper(Method method) {
+            this.method = method;
         }
 
         @Override
         public Object unWrap() {
-            return m;
+            return method;
         }
 
         @Override
         public Class<?>[] getParameterTypes() {
-            return m.getParameterTypes();
+            return method.getParameterTypes();
         }
 
         @Override
         public boolean isVarArgs() {
-            return m.isVarArgs();
+            return method.isVarArgs();
         }
 
         @Override
         public boolean isBridge() {
-            return m.isBridge();
-        }
-    }
-
-    /*
-     * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
-     */
-    private static class ConstructorWrapper extends Wrapper {
-        private final Constructor<?> c;
-
-        public ConstructorWrapper(Constructor<?> c) {
-            this.c = c;
-        }
-
-        @Override
-        public Object unWrap() {
-            return c;
-        }
-
-        @Override
-        public Class<?>[] getParameterTypes() {
-            return c.getParameterTypes();
-        }
-
-        @Override
-        public boolean isVarArgs() {
-            return c.isVarArgs();
-        }
-
-        @Override
-        public boolean isBridge() {
-            return false;
+            return method.isBridge();
         }
     }
 

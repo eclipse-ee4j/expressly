@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2012, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -30,13 +31,13 @@ public class AstSemiColon extends SimpleNode {
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        this.children[0].getValue(ctx);
-        return this.children[1].getValue(ctx);
+        children[0].getValue(ctx);
+        return children[1].getValue(ctx);
     }
 
     @Override
     public void setValue(EvaluationContext ctx, Object value) throws ELException {
-        this.children[0].getValue(ctx);
-        this.children[1].setValue(ctx, value);
+        children[0].getValue(ctx);
+        children[1].setValue(ctx, value);
     }
 }

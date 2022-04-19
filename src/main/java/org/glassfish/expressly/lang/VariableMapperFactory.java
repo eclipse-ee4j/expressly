@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -35,19 +36,20 @@ public class VariableMapperFactory extends VariableMapper {
     }
 
     public VariableMapper create() {
-        return this.momento;
+        return momento;
     }
 
     @Override
     public ValueExpression resolveVariable(String variable) {
-        ValueExpression expr = this.target.resolveVariable(variable);
-        if (expr != null) {
-            if (this.momento == null) {
-                this.momento = new VariableMapperImpl();
+        ValueExpression valueExpression = target.resolveVariable(variable);
+        if (valueExpression != null) {
+            if (momento == null) {
+                momento = new VariableMapperImpl();
             }
-            this.momento.setVariable(variable, expr);
+            momento.setVariable(variable, valueExpression);
         }
-        return expr;
+
+        return valueExpression;
     }
 
     @Override

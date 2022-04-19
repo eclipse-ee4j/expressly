@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 2021 Payara Services Ltd.
+ * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v. 2.0, which is available at
@@ -24,6 +25,8 @@ package org.glassfish.expressly.parser;
  * You can modify this class to customize your error reporting mechanisms so long as you retain the public fields.
  */
 public class ParseException extends Exception {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * This constructor is used by the method "generateParseException" in the generated parser. Calling this constructor
@@ -82,6 +85,11 @@ public class ParseException extends Exception {
     public String[] tokenImage;
 
     /**
+     * The end of line string for this machine.
+     */
+    protected String eol = System.getProperty("line.separator", "\n");
+
+    /**
      * This method has the standard behavior when this object has been created using the standard constructors. Otherwise,
      * it uses "currentToken" and "expectedTokenSequences" to generate a parse error message and returns it. If this object
      * has been created due to a parse error, and you do not catch it (it gets thrown from the parser), then this method is
@@ -92,6 +100,7 @@ public class ParseException extends Exception {
         if (!specialConstructor) {
             return super.getMessage();
         }
+
         String expected = "";
         int maxSize = 0;
         for (int i = 0; i < expectedTokenSequences.length; i++) {
@@ -129,11 +138,6 @@ public class ParseException extends Exception {
         retval += expected;
         return retval;
     }
-
-    /**
-     * The end of line string for this machine.
-     */
-    protected String eol = System.getProperty("line.separator", "\n");
 
     /**
      * Used to convert raw characters to their escaped version when these raw version cannot be used as part of an ASCII
@@ -180,6 +184,7 @@ public class ParseException extends Exception {
                 continue;
             }
         }
+
         return retval.toString();
     }
 
