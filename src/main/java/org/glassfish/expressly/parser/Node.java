@@ -21,6 +21,7 @@ import org.glassfish.expressly.lang.EvaluationContext;
 
 import jakarta.el.ELException;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 import jakarta.el.ValueReference;
 
 /* All AST nodes must implement this interface.  It provides basic
@@ -79,6 +80,7 @@ public interface Node {
     void accept(NodeVisitor visitor) throws ELException;
 
     MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException;
+    MethodReference getMethodReference(EvaluationContext ctx);
 
     Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException;
 

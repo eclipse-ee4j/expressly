@@ -641,7 +641,7 @@ public class ReflectionUtil {
     /*
      * This method duplicates code in jakarta.el.ELUtil. When making changes keep the code in sync.
      */
-    static Object[] buildParameters(ELContext context, Class<?>[] parameterTypes, boolean isVarArgs, Object[] params) {
+    public static Object[] buildParameters(ELContext context, Class<?>[] parameterTypes, boolean isVarArgs, Object[] params) {
         Object[] parameters = null;
         if (parameterTypes.length > 0) {
             parameters = new Object[parameterTypes.length];

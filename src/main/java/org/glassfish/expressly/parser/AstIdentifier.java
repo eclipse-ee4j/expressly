@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -26,6 +27,7 @@ import jakarta.el.ELResolver;
 import jakarta.el.MethodExpression;
 import jakarta.el.MethodInfo;
 import jakarta.el.MethodNotFoundException;
+import jakarta.el.MethodReference;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.ValueExpression;
 import jakarta.el.ValueReference;
@@ -153,6 +155,11 @@ public final class AstIdentifier extends SimpleNode {
     @Override
     public MethodInfo getMethodInfo(EvaluationContext ctx, Class[] paramTypes) throws ELException {
         return this.getMethodExpression(ctx).getMethodInfo(ctx.getELContext());
+    }
+
+    @Override
+    public MethodReference getMethodReference(EvaluationContext ctx) {
+        return getMethodExpression(ctx).getMethodReference(ctx.getELContext());
     }
 
     private MethodExpression getMethodExpression(EvaluationContext ctx) throws ELException {

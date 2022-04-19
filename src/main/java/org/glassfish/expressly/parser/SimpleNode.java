@@ -25,6 +25,7 @@ import org.glassfish.expressly.util.MessageFactory;
 
 import jakarta.el.ELException;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.ValueReference;
 
@@ -168,6 +169,11 @@ public abstract class SimpleNode extends ELSupport implements Node {
 
     @Override
     public MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MethodReference getMethodReference(EvaluationContext ctx) {
         throw new UnsupportedOperationException();
     }
 

@@ -17,6 +17,11 @@
 
 package org.glassfish.expressly.parser;
 
+import static org.glassfish.expressly.util.ReflectionUtil.buildParameters;
+import static org.glassfish.expressly.util.ReflectionUtil.findMethod;
+import static org.glassfish.expressly.util.ReflectionUtil.getTypesFromValues;
+import static org.glassfish.expressly.util.ReflectionUtil.invokeMethod;
+
 import java.lang.reflect.Method;
 
 import org.glassfish.expressly.lang.ELSupport;
@@ -29,6 +34,7 @@ import jakarta.el.ELException;
 import jakarta.el.ELResolver;
 import jakarta.el.ImportHandler;
 import jakarta.el.MethodInfo;
+import jakarta.el.MethodReference;
 import jakarta.el.PropertyNotFoundException;
 import jakarta.el.PropertyNotWritableException;
 import jakarta.el.ValueReference;
@@ -42,6 +48,7 @@ public final class AstValue extends SimpleNode {
 
     protected static class Target {
         private final Object base;
+
         private final Node suffixNode;
         private final EvaluationContext ctx;
 
@@ -49,6 +56,18 @@ public final class AstValue extends SimpleNode {
             this.base = base;
             this.suffixNode = suffixNode;
             this.ctx = ctx;
+        }
+
+        public Object getBase() {
+            return base;
+        }
+
+        public String getMethodName() {
+            return getProperty().toString();
+        }
+
+        public Object getProperty() {
+            return suffixNode.getValue(ctx);
         }
 
         boolean isMethodCall() {
@@ -61,9 +80,27 @@ public final class AstValue extends SimpleNode {
                 return null;
             }
 
-            return getArguments(suffixNode).getParameters(ctx);
+            return arguments.getParameters(ctx);
         }
 
+        Class<?>[] getFormalParamTypes() {
+            AstMethodArguments arguments = getArguments(suffixNode);
+            if (arguments == null) {
+                return null;
+            }
+
+            return arguments.getParamTypes();
+        }
+
+
+        Class<?>[] getActualParamTypes() {
+            Object[] values = getParamValues();
+            if (values == null) {
+                return null;
+            }
+
+            return getTypesFromValues(values);
+        }
     }
 
     public AstValue(int id) {
@@ -252,9 +289,9 @@ public final class AstValue extends SimpleNode {
     public MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException {
         Target target = getTarget(ctx);
 
-        Method method = ReflectionUtil.findMethod(
-                            target.base.getClass(),
-                            target.suffixNode.getValue(ctx).toString(),
+        Method method = findMethod(
+                            target.getBase().getClass(),
+                            target.getMethodName(),
                             paramTypes,
                             target.getParamValues());
 
@@ -262,23 +299,50 @@ public final class AstValue extends SimpleNode {
     }
 
     @Override
-    public Object invoke(EvaluationContext ctx, Class[] paramTypes, Object[] paramValues) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
-            AstMethodArguments args = getArguments(t.suffixNode);
-            // Always use the param types in the expression, and ignore those
-            // specified elsewhere, such as TLD
-            paramTypes = args.getParamTypes();
-            Object[] params = args.getParameters(ctx);
-            String method = (String) t.suffixNode.getValue(ctx);
+    public MethodReference getMethodReference(EvaluationContext ctx) {
+        Target target = getTarget(ctx);
 
+        Method method = ReflectionUtil.findMethod(
+                target.getBase().getClass(),
+                target.getMethodName(),
+                target.getActualParamTypes(),
+                target.getParamValues());
+
+        return new MethodReference(
+            target.getBase(),
+            getMethodInfo(ctx, target.getActualParamTypes()),
+            method.getAnnotations(),
+            buildParameters(
+                ctx.getELContext(),
+                target.getActualParamTypes(),
+                method.isVarArgs(),
+                target.getParamValues()));
+    }
+
+
+    @Override
+    public Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException {
+        Target target = getTarget(ctx);
+
+        if (target.isMethodCall()) {
             ctx.setPropertyResolved(false);
-            ELResolver resolver = ctx.getELResolver();
-            return resolver.invoke(ctx, t.base, method, paramTypes, params);
+
+            return ctx.getELResolver().invoke(
+                ctx,
+                target.getBase(),
+                target.getMethodName(),
+                target.getFormalParamTypes(), // Use the param types in expression, and ignore those from elsewhere, e.g. TLD
+                target.getParamValues());
         }
-        Object property = t.suffixNode.getValue(ctx);
-        Method m = ReflectionUtil.findMethod(t.base.getClass(), property.toString(), paramTypes, paramValues);
-        return ReflectionUtil.invokeMethod(ctx, m, t.base, paramValues);
+
+        return invokeMethod(
+                ctx,
+                findMethod(
+                    target.getBase().getClass(),
+                    target.getProperty().toString(),
+                    paramTypes, paramValues),
+                target.getBase(),
+                paramValues);
     }
 
     @Override
