@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,24 +34,25 @@ public final class AstInteger extends SimpleNode {
 
     private Number number;
 
-    protected Number getInteger() {
-        if (this.number == null) {
-            try {
-                this.number = Long.valueOf(this.image);
-            } catch (ArithmeticException e1) {
-                this.number = new BigInteger(this.image);
-            }
-        }
-        return number;
-    }
-
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
-        return this.getInteger().getClass();
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
+        return getInteger().getClass();
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        return this.getInteger();
+        return getInteger();
+    }
+
+    protected Number getInteger() {
+        if (number == null) {
+            try {
+                number = Long.valueOf(image);
+            } catch (ArithmeticException e1) {
+                this.number = new BigInteger(image);
+            }
+        }
+
+        return number;
     }
 }

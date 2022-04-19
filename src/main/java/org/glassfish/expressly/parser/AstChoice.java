@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -30,7 +31,7 @@ public final class AstChoice extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
         Object obj0 = this.children[0].getValue(ctx);
         Boolean b0 = coerceToBoolean(obj0);
         return this.children[((b0.booleanValue() ? 1 : 2))].getType(ctx);
@@ -58,7 +59,7 @@ public final class AstChoice extends SimpleNode {
     }
 
     @Override
-    public Object invoke(EvaluationContext ctx, Class[] paramTypes, Object[] paramValues) throws ELException {
+    public Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException {
         Object obj0 = this.children[0].getValue(ctx);
         Boolean b0 = coerceToBoolean(obj0);
         return this.children[((b0.booleanValue() ? 1 : 2))].invoke(ctx, paramTypes, paramValues);

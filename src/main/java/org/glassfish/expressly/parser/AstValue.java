@@ -108,155 +108,70 @@ public final class AstValue extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
+        Target target = getTarget(ctx);
+        if (target.isMethodCall()) {
             return null;
         }
 
-        Object property = t.suffixNode.getValue(ctx);
+        Object property = target.getProperty();
         ctx.setPropertyResolved(false);
-        Class ret = ctx.getELResolver().getType(ctx, t.base, property);
+        Class<?> type = ctx.getELResolver().getType(ctx, target.getBase(), property);
         if (!ctx.isPropertyResolved()) {
-            ELSupport.throwUnhandled(t.base, property);
+            ELSupport.throwUnhandled(target.base, property);
         }
 
-        return ret;
+        return type;
     }
 
     @Override
     public ValueReference getValueReference(EvaluationContext ctx) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
+        Target target = getTarget(ctx);
+        if (target.isMethodCall()) {
             return null;
         }
-        Object property = t.suffixNode.getValue(ctx);
-        return new ValueReference(t.base, property);
+
+        return new ValueReference(target.getBase(), target.getProperty());
     }
 
-    private static AstMethodArguments getArguments(Node node) {
-        if (node instanceof AstDotSuffix && node.jjtGetNumChildren() > 0) {
-            return (AstMethodArguments) node.jjtGetChild(0);
-        }
-
-        if (node instanceof AstBracketSuffix && node.jjtGetNumChildren() > 1) {
-            return (AstMethodArguments) node.jjtGetChild(1);
-        }
-
-        return null;
-    }
-
-    private Object getValue(Object base, Node child, EvaluationContext ctx) throws ELException {
-        Object value = null;
-        ELResolver resolver = ctx.getELResolver();
-        Object property = child.getValue(ctx);
-        AstMethodArguments args = getArguments(child);
-        if (args != null) {
-            // This is a method call
-            if (!(property instanceof String)) {
-                throw new ELException(MessageFactory.get("error.method.name", property));
-            }
-            Class<?>[] paramTypes = args.getParamTypes();
-            Object[] params = args.getParameters(ctx);
-
-            ctx.setPropertyResolved(false);
-            value = resolver.invoke(ctx, base, property, paramTypes, params);
-        } else {
-            if (property != null) {
-                ctx.setPropertyResolved(false);
-                value = resolver.getValue(ctx, base, property);
-                if (!ctx.isPropertyResolved()) {
-                    ELSupport.throwUnhandled(base, property);
-                }
-            }
-        }
-        return value;
-    }
-
-    private Object getBase(EvaluationContext ctx) {
-        try {
-            return this.children[0].getValue(ctx);
-        } catch (PropertyNotFoundException ex) {
-            // Next check if the base is an imported class
-            if (this.children[0] instanceof AstIdentifier) {
-                String name = ((AstIdentifier) this.children[0]).image;
-                ImportHandler importHandler = ctx.getImportHandler();
-                if (importHandler != null) {
-                    Class<?> c = importHandler.resolveClass(name);
-                    if (c != null) {
-                        return new ELClass(c);
-                    }
-                }
-            }
-            throw ex;
-        }
-    }
-
-    private Target getTarget(EvaluationContext ctx) throws ELException {
-        // Evaluate expr-a to value-a
-        Object base = getBase(ctx);
-
-        // if our base is null (we know there are more properites to evaluate)
-        if (base == null) {
-            throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.base", children[0].getImage()));
-        }
-
-        // Set up our start/end
-        Object property = null;
-        int propCount = this.jjtGetNumChildren() - 1;
-        int i = 1;
-
-        // Evaluate any properties before our target
-        if (propCount > 1) {
-            while (base != null && i < propCount) {
-                base = getValue(base, this.children[i], ctx);
-                i++;
-            }
-
-            // If we are in this block, we have more properties to resolve,
-            // but our base was null
-            if (base == null) {
-                throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.property", property));
-            }
-        }
-
-        return new Target(base, children[propCount], ctx);
-    }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        Object base = getBase(ctx);
-        int propCount = this.jjtGetNumChildren();
+        Object value = getBase(ctx);
+        int propCount = jjtGetNumChildren();
         int i = 1;
-        while (base != null && i < propCount) {
-            base = getValue(base, this.children[i], ctx);
+        while (value != null && i < propCount) {
+            value = getValue(value, children[i], ctx);
             i++;
         }
-        return base;
+
+        return value;
     }
 
     @Override
     public boolean isReadOnly(EvaluationContext ctx) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
+        Target target = getTarget(ctx);
+        if (target.isMethodCall()) {
             return true;
         }
-        Object property = t.suffixNode.getValue(ctx);
+
+        Object property = target.getProperty();
         ctx.setPropertyResolved(false);
-        boolean ret = ctx.getELResolver().isReadOnly(ctx, t.base, property);
+        boolean isReadOnly = ctx.getELResolver().isReadOnly(ctx, target.getBase(), property);
         if (!ctx.isPropertyResolved()) {
-            ELSupport.throwUnhandled(t.base, property);
+            ELSupport.throwUnhandled(target.getBase(), property);
         }
-        return ret;
+
+        return isReadOnly;
     }
 
     @Override
     public void setValue(EvaluationContext ctx, Object value) throws ELException {
-        Target t = getTarget(ctx);
-        if (t.isMethodCall()) {
+        Target target = getTarget(ctx);
+        if (target.isMethodCall()) {
             throw new PropertyNotWritableException(MessageFactory.get("error.syntax.set"));
         }
-        Object property = t.suffixNode.getValue(ctx);
+        Object property = target.getProperty();
         ELResolver elResolver = ctx.getELResolver();
 
         /*
@@ -264,7 +179,7 @@ public final class AstValue extends SimpleNode {
          * value to the target. The conversion is kept here to be backward compatible.
          */
         ctx.setPropertyResolved(false);
-        Class<?> targetType = elResolver.getType(ctx, t.base, property);
+        Class<?> targetType = elResolver.getType(ctx, target.getBase(), property);
         if (ctx.isPropertyResolved()) {
             ctx.setPropertyResolved(false);
             Object targetValue = elResolver.convertToType(ctx, value, targetType);
@@ -279,9 +194,9 @@ public final class AstValue extends SimpleNode {
         }
 
         ctx.setPropertyResolved(false);
-        elResolver.setValue(ctx, t.base, property, value);
+        elResolver.setValue(ctx, target.getBase(), property, value);
         if (!ctx.isPropertyResolved()) {
-            ELSupport.throwUnhandled(t.base, property);
+            ELSupport.throwUnhandled(target.getBase(), property);
         }
     }
 
@@ -349,4 +264,100 @@ public final class AstValue extends SimpleNode {
     public boolean isParametersProvided() {
         return getArguments(this.children[this.jjtGetNumChildren() - 1]) != null;
     }
+
+
+
+    // ### Private methods
+
+    private static AstMethodArguments getArguments(Node node) {
+        if (node instanceof AstDotSuffix && node.jjtGetNumChildren() > 0) {
+            return (AstMethodArguments) node.jjtGetChild(0);
+        }
+
+        if (node instanceof AstBracketSuffix && node.jjtGetNumChildren() > 1) {
+            return (AstMethodArguments) node.jjtGetChild(1);
+        }
+
+        return null;
+    }
+
+    private Object getValue(Object base, Node child, EvaluationContext ctx) throws ELException {
+        Object value = null;
+        ELResolver resolver = ctx.getELResolver();
+        Object property = child.getValue(ctx);
+        AstMethodArguments args = getArguments(child);
+        if (args != null) {
+            // This is a method call
+            if (!(property instanceof String)) {
+                throw new ELException(MessageFactory.get("error.method.name", property));
+            }
+            Class<?>[] paramTypes = args.getParamTypes();
+            Object[] params = args.getParameters(ctx);
+
+            ctx.setPropertyResolved(false);
+            value = resolver.invoke(ctx, base, property, paramTypes, params);
+        } else {
+            if (property != null) {
+                ctx.setPropertyResolved(false);
+                value = resolver.getValue(ctx, base, property);
+                if (!ctx.isPropertyResolved()) {
+                    ELSupport.throwUnhandled(base, property);
+                }
+            }
+        }
+
+        return value;
+    }
+
+    private Object getBase(EvaluationContext ctx) {
+        try {
+            return children[0].getValue(ctx);
+        } catch (PropertyNotFoundException ex) {
+            // Next check if the base is an imported class
+            if (children[0] instanceof AstIdentifier) {
+                String name = ((AstIdentifier) children[0]).image;
+                ImportHandler importHandler = ctx.getImportHandler();
+                if (importHandler != null) {
+                    Class<?> resolvedClass = importHandler.resolveClass(name);
+                    if (resolvedClass != null) {
+                        return new ELClass(resolvedClass);
+                    }
+                }
+            }
+
+            throw ex;
+        }
+    }
+
+    private Target getTarget(EvaluationContext ctx) throws ELException {
+        // Evaluate expr-a to value-a
+        Object base = getBase(ctx);
+
+        // If our base is null (we know there are more properties to evaluate)
+        if (base == null) {
+            throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.base", children[0].getImage()));
+        }
+
+        // Set up our start/end
+        Object property = null;
+        int propCount = this.jjtGetNumChildren() - 1;
+        int i = 1;
+
+        // Evaluate any properties before our target
+        if (propCount > 1) {
+            while (base != null && i < propCount) {
+                base = getValue(base, this.children[i], ctx);
+                i++;
+            }
+
+            // If we are in this block, we have more properties to resolve,
+            // but our base was null
+            if (base == null) {
+                throw new PropertyNotFoundException(MessageFactory.get("error.unreachable.property", property));
+            }
+        }
+
+        return new Target(base, children[propCount], ctx);
+    }
+
 }

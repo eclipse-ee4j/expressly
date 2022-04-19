@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -30,22 +31,22 @@ public final class AstDynamicExpression extends SimpleNode {
     }
 
     @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
-        return this.children[0].getType(ctx);
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
+        return children[0].getType(ctx);
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        return this.children[0].getValue(ctx);
+        return children[0].getValue(ctx);
     }
 
     @Override
     public boolean isReadOnly(EvaluationContext ctx) throws ELException {
-        return this.children[0].isReadOnly(ctx);
+        return children[0].isReadOnly(ctx);
     }
 
     @Override
     public void setValue(EvaluationContext ctx, Object value) throws ELException {
-        this.children[0].setValue(ctx, value);
+        children[0].setValue(ctx, value);
     }
 }

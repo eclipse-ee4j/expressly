@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, 2022 Contributors to the Eclipse Foundation.
  * Copyright (c) 1997, 2018 Oracle and/or its affiliates. All rights reserved.
  *
  * This program and the accompanying materials are made available under the
@@ -33,24 +34,26 @@ public final class AstFloatingPoint extends SimpleNode {
 
     private Number number;
 
-    public Number getFloatingPoint() {
-        if (this.number == null) {
-            try {
-                this.number = Double.valueOf(this.image);
-            } catch (ArithmeticException e0) {
-                this.number = new BigDecimal(this.image);
-            }
-        }
-        return this.number;
+    @Override
+    public Class<?> getType(EvaluationContext ctx) throws ELException {
+        return getFloatingPoint().getClass();
     }
 
     @Override
     public Object getValue(EvaluationContext ctx) throws ELException {
-        return this.getFloatingPoint();
+        return getFloatingPoint();
     }
 
-    @Override
-    public Class getType(EvaluationContext ctx) throws ELException {
-        return this.getFloatingPoint().getClass();
+    public Number getFloatingPoint() {
+        if (number == null) {
+            try {
+                number = Double.valueOf(image);
+            } catch (ArithmeticException e0) {
+                number = new BigDecimal(image);
+            }
+        }
+
+        return number;
     }
+
 }

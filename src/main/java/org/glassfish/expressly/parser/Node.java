@@ -80,6 +80,7 @@ public interface Node {
     void accept(NodeVisitor visitor) throws ELException;
 
     MethodInfo getMethodInfo(EvaluationContext ctx, Class<?>[] paramTypes) throws ELException;
+
     MethodReference getMethodReference(EvaluationContext ctx);
 
     Object invoke(EvaluationContext ctx, Class<?>[] paramTypes, Object[] paramValues) throws ELException;
