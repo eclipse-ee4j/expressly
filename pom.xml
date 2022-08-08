@@ -31,7 +31,7 @@
 
     <groupId>org.glassfish.expressly</groupId>
     <artifactId>expressly</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1-SNAPSHOT</version>
 
     <name>Eclipse Expressly</name>
     <description>Jakarta Expression Language Implementation</description>
