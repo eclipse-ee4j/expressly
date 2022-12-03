@@ -144,16 +144,6 @@ public class FunctionMapperImpl extends FunctionMapper implements Externalizable
             return method;
         }
 
-        public boolean matches(String prefix, String localName) {
-            if (prefix != null) {
-                if ((prefix == null) || !prefix.equals(prefix)) {
-                    return false;
-                }
-            }
-
-            return localName.equals(localName);
-        }
-
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof Function) {
