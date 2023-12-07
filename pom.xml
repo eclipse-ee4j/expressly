@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2022 Contributors to the Eclipse Foundation.
+    Copyright (c) 2022, 2023 Contributors to the Eclipse Foundation.
     Copyright (c) 1997, 2021 Oracle and/or its affiliates and others.
     All rights reserved.
 
@@ -19,19 +19,19 @@
 
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.eclipse.ee4j</groupId>
         <artifactId>project</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.9</version>
         <relativePath/>
     </parent>
 
     <groupId>org.glassfish.expressly</groupId>
     <artifactId>expressly</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>6.0.0-SNAPSHOT</version>
 
     <name>Eclipse Expressly</name>
     <description>Jakarta Expression Language Implementation</description>
@@ -47,9 +47,9 @@
     </developers>
     <contributors>
        <contributor>
-           <name>Jakarta Expression Language Contributors</name>
-           <email>el-dev@eclipse.org</email>
-           <url>https://github.com/eclipse-ee4j/el-ri/graphs/contributors</url>
+           <name>Expressly Contributors</name>
+           <email>expressly-dev@eclipse.org</email>
+           <url>https://github.com/eclipse-ee4j/expressly/graphs/contributors</url>
        </contributor>
     </contributors>
 
@@ -64,21 +64,20 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://github.com/eclipse-ee4j/expressly-ri.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/eclipse-ee4j/expressly-ri.git</developerConnection>
-        <url>https://github.com/eclipse-ee4j/expressly-ri</url>
-        <tag>HEAD</tag>
+        <connection>scm:git:https://github.com/eclipse-ee4j/expressly.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/eclipse-ee4j/expressly.git</developerConnection>
+        <url>https://github.com/eclipse-ee4j/expressly</url>
     </scm>
     <issueManagement>
         <system>github</system>
-        <url>https://github.com/eclipse-ee4j/expressly-ri/issues</url>
+        <url>https://github.com/eclipse-ee4j/expressly/issues</url>
     </issueManagement>
 
     <dependencies>
         <dependency>
             <groupId>jakarta.el</groupId>
             <artifactId>jakarta.el-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0-M1</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -109,9 +108,7 @@
         <plugins>
             <!-- Sets minimal Maven version -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>
@@ -135,12 +132,14 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
+                <version>5.1.9</version>
                 <configuration>
                 	<supportIncrementalBuild>true</supportIncrementalBuild>
                     <instructions>
                         <Bundle-SymbolicName>org.glassfish.expressly</Bundle-SymbolicName>
                         <_include>-osgi.bundle</_include>
+                        <_noimportjava>true</_noimportjava>
+                        <_runee>JavaSE-17</_runee>
                     </instructions>
                 </configuration>
                 <executions>
@@ -156,9 +155,7 @@
 
             <!-- Adds the manifest file created by the org.apache.felix:maven-bundle-plugin -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
                 <configuration>
                     <archive>
                         <manifestFile>
@@ -166,7 +163,7 @@
                         </manifestFile>
                         <manifestEntries>
                             <Extension-Name>org.glassfish.expressly</Extension-Name>
-                            <Specification-Version>5.0</Specification-Version>
+                            <Specification-Version>6.0</Specification-Version>
                             <Specification-Vendor>Eclipse Foundation</Specification-Vendor>
                             <Implementation-Version>${project.version}</Implementation-Version>
                             <Implementation-Vendor>${vendorName}</Implementation-Vendor>
@@ -176,22 +173,19 @@
                 </configuration>
             </plugin>
 
-            <!-- Restricts the Java version to 11 -->
+            <!-- Restricts the Java version to 17 -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <release>11</release>
+                    <release>17</release>
                     <compilerArgument>-Xlint:unchecked</compilerArgument>
                 </configuration>
             </plugin>
 
             <!-- Create Javadoc for API jar -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -209,8 +203,8 @@
                                 </group>
                             </groups>
                             <bottom><![CDATA[
-Comments to: <a href="mailto:el-dev@eclipse.org">el-dev@eclipse.org</a>.<br>
-Copyright &#169; 2018, 2022 Eclipse Foundation. All rights reserved.<br>
+Comments to: <a href="mailto:expressly-dev@eclipse.org">expressly-dev@eclipse.org</a>.<br>
+Copyright &#169; 2018, 2023 Eclipse Foundation. All rights reserved.<br>
 Use is subject to <a href="http://www.eclipse.org/legal/epl-2.0" target="_top">license terms</a>.]]>
                             </bottom>
                         </configuration>
@@ -223,20 +217,10 @@ Use is subject to <a href="http://www.eclipse.org/legal/epl-2.0" target="_top">l
                 <outputDirectory>src/main/java/com/sun/el/parser</outputDirectory> </configuration> </execution> </executions> </plugin> -->
             
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <arguments>${release.arguments}</arguments>
-                </configuration>
-            </plugin>
-            
-            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.2.2</version>
                 <configuration>
-                    <forkMode>never</forkMode>
+                    <forkCount>1</forkCount>
                 </configuration>
             </plugin>
 	   </plugins>

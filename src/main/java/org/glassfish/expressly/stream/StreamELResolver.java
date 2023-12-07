@@ -17,13 +17,11 @@
 
 package org.glassfish.expressly.stream;
 
-import java.beans.FeatureDescriptor;
+import jakarta.el.ELContext;
+import jakarta.el.ELResolver;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
-
-import jakarta.el.ELContext;
-import jakarta.el.ELResolver;
 
 /*
  * This ELResolver intercepts method calls to a Collections, to provide
@@ -103,11 +101,6 @@ public class StreamELResolver extends ELResolver {
     @Override
     public boolean isReadOnly(ELContext context, Object base, Object property) {
         return false;
-    }
-
-    @Override
-    public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext context, Object base) {
-        return null;
     }
 
     @Override
