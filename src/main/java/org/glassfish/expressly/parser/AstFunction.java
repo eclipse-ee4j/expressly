@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 
 import org.glassfish.expressly.lang.EvaluationContext;
 import org.glassfish.expressly.util.MessageFactory;
+import org.glassfish.expressly.util.ReflectionUtil;
 
 import jakarta.el.ELClass;
 import jakarta.el.ELException;
@@ -167,12 +168,11 @@ public final class AstFunction extends SimpleNode {
         Class<?>[] paramTypes = functionMethod.getParameterTypes();
         Object[] params = ((AstMethodArguments) this.children[0]).getParameters(ctx);
         Object result = null;
-        for (int i = 0; i < params.length; i++) {
-            try {
-                params[i] = ctx.convertToType(params[i], paramTypes[i]);
-            } catch (ELException ele) {
-                throw new ELException(MessageFactory.get("error.function", this.getOutputName()), ele);
-            }
+        try {
+            params = ReflectionUtil.buildParameters(ctx, paramTypes, functionMethod.isVarArgs(), params);
+        }
+        catch(ELException ele) {
+            throw new ELException(MessageFactory.get("error.function", this.getOutputName()), ele);
         }
 
         try {

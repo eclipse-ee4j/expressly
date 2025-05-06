@@ -240,7 +240,12 @@ public final class ExpressionBuilder implements NodeVisitor {
 
             int parameterCount = functionMethod.getParameterCount();
             int argumentCount = ((AstMethodArguments) node.jjtGetChild(0)).getParameterCount();
-            if (argumentCount != parameterCount) {
+            if(functionMethod.isVarArgs()) {
+                // last param of the method is the vararg -> 0..n vararg-arguments allowed
+                if (argumentCount < parameterCount - 1) {
+                    throw new ELException(MessageFactory.get("error.fnMapper.minparamcount", funcNode.getOutputName(), parameterCount - 1, argumentCount));
+                }
+            } else if (argumentCount != parameterCount) {
                 throw new ELException(MessageFactory.get("error.fnMapper.paramcount", funcNode.getOutputName(), parameterCount, argumentCount));
             }
         } else if (node instanceof AstIdentifier && varMapper != null) {

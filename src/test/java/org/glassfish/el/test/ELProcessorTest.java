@@ -26,10 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import jakarta.el.ELProcessor;
 import jakarta.el.ELManager;
+import jakarta.el.ELException;
 import jakarta.el.ExpressionFactory;
 import jakarta.el.MethodExpression;
 import jakarta.el.ELContext;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class ELProcessorTest {
 
@@ -160,6 +162,61 @@ public class ELProcessorTest {
         }
         assertTrue(caught);
     }
+
+    @Test
+    public void defineVarargFuncTest()
+    {
+        Class<?> c = MyBean.class;
+        Method meth1 = null;
+        Method meth2 = null;
+        try {
+            meth1 = c.getMethod("join", new Class<?>[] {String[].class});
+            meth2 = c.getMethod("joinPrefixed", new Class<?>[] {String.class, String[].class});
+        } catch(Exception e) {
+            System.out.printf("Exception: ", e);
+        }
+        try {
+            elp.defineFunction("xx", "", meth1);
+            String joined = elp.eval("xx:join()");
+            assertEquals("", joined);
+            joined = elp.eval("xx:join('abc')");
+            assertEquals("abc", joined);
+            joined = elp.eval("xx:join('abc','def')");
+            assertEquals("abc,def", joined);
+            joined = elp.eval("xx:join('abc',null)"); // null is converted to empty string
+            assertEquals("abc,", joined);
+            joined = elp.eval("xx:join(null)"); // this is join((String[])null) in Java
+            assertEquals("<null array>", joined);
+        } catch(NoSuchMethodException ex) {
+
+        }
+
+        boolean caught = false;
+        try {
+            elp.defineFunction("xx", "", meth2);
+            Integer sum = elp.eval("xx:joinPrefixed()");
+            assertEquals(0, sum.intValue());
+        } catch (ELException ex) {
+            caught = true;
+        } catch (NoSuchMethodException ex) {
+
+        }
+        assertTrue(caught);
+
+        try {
+            elp.defineFunction("xx", "", meth2);
+            String joined = elp.eval("xx:joinPrefixed('res:')");
+            assertEquals("res:", joined);
+            joined = elp.eval("xx:joinPrefixed('res:', 'abc')");
+            assertEquals("res:abc", joined);
+            joined = elp.eval("xx:joinPrefixed('res:', 'abc', 'def')");
+            assertEquals("res:abc,def", joined);
+            joined = elp.eval("xx:joinPrefixed('res:', null)");
+            assertEquals("res:<null array>", joined);
+        } catch(NoSuchMethodException ex) {
+
+        }
+    }
 /*
     @Test
     public void testBean() {
@@ -199,6 +256,15 @@ public class ELProcessorTest {
         }
         public static int getBar() {
             return 64;
+        }
+        public static String join(String... args) {
+            if(args == null)
+                return "<null array>";
+
+            return String.join(",", args);
+        }
+        public static String joinPrefixed(String prefix, String... args) {
+            return prefix + join(args);
         }
     }
 }
